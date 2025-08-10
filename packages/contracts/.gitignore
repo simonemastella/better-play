@@ -1,0 +1,14 @@
+# Local overrides for contracts package
+# (Most patterns are covered by root .gitignore)
+
+# Contract-specific build outputs
+/cache
+/artifacts  
+/typechain-types
+
+# Local deployment files
+deployments/localhost/
+deployments/hardhat/
+
+# Gas reports
+gas-report.txt

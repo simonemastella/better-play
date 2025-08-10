@@ -1,0 +1,29 @@
+{
+  "extends": "nx/presets/npm.json",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/build", "{projectRoot}/artifacts", "{projectRoot}/typechain-types"]
+    },
+    "dev": {
+      "cache": false
+    },
+    "lint": {
+      "cache": true
+    },
+    "type-check": {
+      "cache": true
+    },
+    "test": {
+      "cache": true
+    },
+    "clean": {
+      "cache": false
+    }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "!{projectRoot}/tsconfig.spec.json", "!{projectRoot}/jest.config.[jt]s"],
+    "sharedGlobals": []
+  }
+}

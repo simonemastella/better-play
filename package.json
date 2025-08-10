@@ -1,0 +1,26 @@
+{
+  "name": "better-play",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "nx run-many -t dev",
+    "build": "nx run-many -t build",
+    "lint": "nx run-many -t lint",
+    "type-check": "nx run-many -t type-check",
+    "test": "nx run-many -t test",
+    "clean": "nx run-many -t clean"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "nx": "^18.0.0",
+    "typescript": "^5.3.3"
+  },
+  "packageManager": "yarn@4.9.2",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

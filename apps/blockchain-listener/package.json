@@ -1,0 +1,28 @@
+{
+  "name": "@better-play/blockchain-listener",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.ts",
+    "lint": "eslint src",
+    "type-check": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@better-play/shared": "workspace:*",
+    "@better-play/types": "workspace:*",
+    "@solana/web3.js": "^1.87.6",
+    "dotenv": "^16.4.1",
+    "ethers": "^6.10.0",
+    "viem": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.1"
+  }
+}
