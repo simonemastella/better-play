@@ -1,15 +1,14 @@
 import { z, loadEnv, dotEnvSource, envVarsSource } from "@better-play/shared";
 
 const envSchema = z.object({
-  VECHAIN_PRIVATE_KEY: z.string(),
+  DATABASE_URL: z.string().default("postgresql://localhost:5432/better_play"),
 });
 
 export type Env = z.infer<typeof envSchema>;
 
-// Load from multiple sources with priority (later sources override earlier ones)
 export const env = loadEnv(envSchema, {
   sources: [
-    dotEnvSource(".env"), // Then .env
-    envVarsSource(), // Finally, process.env
+    dotEnvSource(".env"),
+    envVarsSource(),
   ],
 });

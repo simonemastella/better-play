@@ -22,6 +22,12 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         uint256 endBlock; // is fetched the first time
         uint256 collectedAmount; // sum of amount paid to get tickets
     }
+    // Structs for round results
+    struct RoundResult {
+        address[] winners;
+        uint256[] prizesWon;
+    }
+
     RoundDetails public nextRoundDetails;
     mapping(uint256 roundId => RoundDetails details) public roundDetails;
     mapping(uint256 roundId => RoundStats stats) public roundStats;
@@ -30,12 +36,6 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
 
     IXAllocationVoting public immutable xAllocationVoting;
     IERC20 public immutable paymentToken;
-
-    // Structs for round results
-    struct RoundResult {
-        address[] winners;
-        uint256[] prizesWon;
-    }
 
     mapping(uint256 roundId => RoundResult result) public roundResults;
 
@@ -100,19 +100,23 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
 
     function buyTicket() external nonReentrant whenNotPaused {
         uint256 roundId = xAllocationVoting.currentRoundId();
-        if (roundStats[roundId].endBlock == 0) 
-            _setupRound(roundId);
-        require(roundStats[roundId].endBlock > block.number + 6, "Round ends too soon");
+        if (roundStats[roundId].endBlock == 0) _setupRound(roundId);
+        require(
+            roundStats[roundId].endBlock > block.number + 6,
+            "Round ends too soon"
+        );
         uint256 ticketPrice = roundDetails[roundId].ticketPrice;
-        require(paymentToken.transferFrom(msg.sender, address(this), ticketPrice), "Token transfer failed");
-        
+        require(
+            paymentToken.transferFrom(msg.sender, address(this), ticketPrice),
+            "Token transfer failed"
+        );
+
         uint256 ticketId = roundStats[roundId].nextTicketId++;
         roundStats[roundId].collectedAmount += ticketPrice;
         ticketOwner[roundId][ticketId] = msg.sender;
 
         emit TicketPurchased(ticketId, msg.sender, roundId, ticketPrice);
     }
-
 
     function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
@@ -142,7 +146,10 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         emit NextRoundDetailsUpdated(oldPrice, _newPrice, _newPrizes);
     }
 
-    function emergencyWithdraw(address token, uint256 amount) external onlyRole(TREASURER_ROLE) {
+    function emergencyWithdraw(
+        address token,
+        uint256 amount
+    ) external onlyRole(TREASURER_ROLE) {
         require(token != address(0), "Invalid token address");
         require(amount > 0, "Amount must be greater than 0");
         require(IERC20(token).transfer(msg.sender, amount), "Transfer failed");
@@ -150,19 +157,25 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
 
     function revealRound(uint256 _veBetterRoundId) external nonReentrant {
         _validateRound(_veBetterRoundId);
-        
+
         uint256 totalTickets = roundStats[_veBetterRoundId].nextTicketId;
         uint256 totalPrize = roundStats[_veBetterRoundId].collectedAmount;
         bytes32 blockHash = _getRandomness(_veBetterRoundId);
-        
-        (address[] memory winners, uint256[] memory prizesWon) = _selectWinnersAndCalculatePrizes(
-            _veBetterRoundId, 
-            totalTickets, 
-            totalPrize, 
-            blockHash
-        );
 
-        roundResults[_veBetterRoundId] = RoundResult({winners: winners, prizesWon: prizesWon});
+        (
+            address[] memory winners,
+            uint256[] memory prizesWon
+        ) = _selectWinnersAndCalculatePrizes(
+                _veBetterRoundId,
+                totalTickets,
+                totalPrize,
+                blockHash
+            );
+
+        roundResults[_veBetterRoundId] = RoundResult({
+            winners: winners,
+            prizesWon: prizesWon
+        });
         _distributePrizes(_veBetterRoundId, winners, prizesWon);
 
         emit RoundRevealed(_veBetterRoundId, winners, prizesWon, totalPrize);
@@ -170,8 +183,14 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
 
     function _validateRound(uint256 roundId) internal view {
         require(xAllocationVoting.hasEnded(roundId), "Round not ended yet");
-        require(roundResults[roundId].winners.length == 0, "Round already revealed");
-        require(roundStats[roundId].nextTicketId > 0, "No tickets sold for this round");
+        require(
+            roundResults[roundId].winners.length == 0,
+            "Round already revealed"
+        );
+        require(
+            roundStats[roundId].nextTicketId > 0,
+            "No tickets sold for this round"
+        );
     }
 
     function _getRandomness(uint256 roundId) internal view returns (bytes32) {
@@ -187,13 +206,17 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         bytes32 blockHash
     ) internal view returns (address[] memory, uint256[] memory) {
         uint256[] storage prizes = roundDetails[roundId].prizes;
-        uint256 winnersCount = prizes.length > totalTickets ? totalTickets : prizes.length;
-        
+        uint256 winnersCount = prizes.length > totalTickets
+            ? totalTickets
+            : prizes.length;
+
         address[] memory winners = new address[](winnersCount);
         uint256[] memory prizesWon = new uint256[](winnersCount);
 
         for (uint256 i = 0; i < winnersCount; i++) {
-            uint256 ticketId = uint256(keccak256(abi.encodePacked(blockHash, roundId, i))) % totalTickets;
+            uint256 ticketId = uint256(
+                keccak256(abi.encodePacked(blockHash, roundId, i))
+            ) % totalTickets;
             winners[i] = ticketOwner[roundId][ticketId];
             prizesWon[i] = (totalPrize * prizes[i]) / 10_000;
         }
