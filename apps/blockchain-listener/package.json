@@ -6,23 +6,23 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.ts",
+    "start": "node dist/index.js",
     "lint": "eslint src",
     "type-check": "tsc --noEmit",
     "test": "vitest"
-  },
-  "dependencies": {
-    "@better-play/shared": "workspace:*",
-    "@better-play/types": "workspace:*",
-    "@solana/web3.js": "^1.87.6",
-    "dotenv": "^16.4.1",
-    "ethers": "^6.10.0",
-    "viem": "^2.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vitest": "^1.2.1"
+  },
+  "dependencies": {
+    "@better-play/contracts": "workspace:^",
+    "@better-play/database": "workspace:^",
+    "@vechain/sdk-network": "^2.0.3",
+    "@vechain/vebetterdao-contracts": "^6.0.1",
+    "ethers": "^6.15.0",
+    "rxjs": "^7.8.2"
   }
 }
