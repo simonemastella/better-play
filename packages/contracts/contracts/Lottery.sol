@@ -46,6 +46,7 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         uint256 indexed roundId,
         uint256 price
     );
+    event AmountIncreased(uint256 indexed roundId, uint256 amount);
     event NextRoundDetailsUpdated(
         uint256 oldPrice,
         uint256 newPrice,
@@ -116,6 +117,25 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         ticketOwner[roundId][ticketId] = msg.sender;
 
         emit TicketPurchased(ticketId, msg.sender, roundId, ticketPrice);
+    }
+
+    function increaseVolume(
+        uint256 amount
+    ) external nonReentrant whenNotPaused {
+        uint256 roundId = xAllocationVoting.currentRoundId();
+        if (roundStats[roundId].endBlock == 0) _setupRound(roundId);
+        require(
+            roundStats[roundId].endBlock > block.number + 6,
+            "Round ends too soon"
+        );
+        require(
+            paymentToken.transferFrom(msg.sender, address(this), amount),
+            "Token transfer failed"
+        );
+
+        roundStats[roundId].collectedAmount += ticketPrice;
+
+        emit AmountIncreased(roundId, ticketPrice);
     }
 
     function pause() external onlyRole(PAUSER_ROLE) {
