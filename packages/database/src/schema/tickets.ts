@@ -12,7 +12,7 @@ import { rounds } from "./rounds";
 export const tickets = pgTable(
   "tickets",
   {
-    ticketId: bigint("ticket_id", { mode: "bigint" }).notNull(),
+    ticketId: bigint("ticket_id", { mode: "number" }).notNull(),
     roundId: integer("round_id")
       .notNull()
       .references(() => rounds.roundId),

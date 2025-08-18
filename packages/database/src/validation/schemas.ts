@@ -1,6 +1,6 @@
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import * as schema from '../schema';
+import * as schema from '../schema/index.js';
 
 // Basic schemas without refinements
 export const insertUserSchema = createInsertSchema(schema.users);

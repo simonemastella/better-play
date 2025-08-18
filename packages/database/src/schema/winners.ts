@@ -10,7 +10,7 @@ export const winners = pgTable("winners", {
   winner: text("winner")
     .notNull()
     .references(() => users.address),
-  prizeWon: bigint("prize_won", { mode: "bigint" }).notNull(),
+  prizeWon: bigint("prize_won", { mode: "number" }).notNull(),
 }, (table) => [
   primaryKey({ columns: [table.roundId, table.position] }),
 ]);

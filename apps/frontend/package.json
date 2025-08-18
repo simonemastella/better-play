@@ -10,8 +10,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-play/shared": "workspace:*",
-    "@better-play/types": "workspace:*",
     "@tanstack/react-query": "^5.17.19",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

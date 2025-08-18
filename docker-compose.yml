@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: better-play-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-betterplay}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-betterplay123}
+      POSTGRES_DB: ${POSTGRES_DB:-betterplay}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - better-play-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-betterplay}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  blockchain-listener:
+    build:
+      context: .
+      dockerfile: apps/blockchain-listener/Dockerfile
+    container_name: better-play-blockchain-listener
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-betterplay}:${POSTGRES_PASSWORD:-betterplay123}@postgres:5432/${POSTGRES_DB:-betterplay}
+      LOTTERY_CONTRACT_ADDRESS: ${LOTTERY_CONTRACT_ADDRESS}
+      NETWORK: ${NETWORK:-testnet}
+      STARTING_BLOCK: ${STARTING_BLOCK:-0}
+      POLLING_INTERVAL: ${POLLING_INTERVAL:-5000}
+    networks:
+      - better-play-network
+    volumes:
+      - ./apps/blockchain-listener:/app/apps/blockchain-listener:ro
+      - ./packages:/app/packages:ro
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  better-play-network:

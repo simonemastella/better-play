@@ -7,12 +7,12 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "nx run-many -t dev",
-    "build": "nx run-many -t build",
-    "lint": "nx run-many -t lint",
-    "type-check": "nx run-many -t type-check",
-    "test": "nx run-many -t test",
-    "clean": "nx run-many -t clean"
+    "dev": "yarn workspaces foreach -Ap run dev",
+    "build": "yarn workspaces foreach -Ap run build",
+    "lint": "yarn workspaces foreach -Ap run lint",
+    "type-check": "yarn workspaces foreach -Ap run type-check",
+    "test": "yarn workspaces foreach -Ap run test",
+    "clean": "yarn workspaces foreach -Ap run clean"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

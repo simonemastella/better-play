@@ -37,7 +37,7 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
     IXAllocationVoting public immutable xAllocationVoting;
     IERC20 public immutable paymentToken;
 
-    mapping(uint256 roundId => RoundResult result) public roundResults;
+    mapping(uint256 roundId => RoundResult result) private roundResults;
 
     // Events
     event TicketPurchased(
@@ -132,6 +132,7 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
             paymentToken.transferFrom(msg.sender, address(this), amount),
             "Token transfer failed"
         );
+        uint256 ticketPrice = roundDetails[roundId].ticketPrice;
 
         roundStats[roundId].collectedAmount += ticketPrice;
 

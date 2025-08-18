@@ -12,13 +12,7 @@
     "noEmit": true,
     "incremental": true,
     "baseUrl": ".",
-    "paths": {
-      "@better-play/shared": ["./packages/shared/src"],
-      "@better-play/shared/*": ["./packages/shared/src/*"],
-      "@better-play/types": ["./packages/types/src"],
-      "@better-play/types/*": ["./packages/types/src/*"],
-      "@better-play/contracts": ["./packages/contracts"]
-    }
+    "paths": {}
   },
   "exclude": ["node_modules", "**/dist", "**/build"]
 }
