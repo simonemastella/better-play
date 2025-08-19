@@ -1,4 +1,4 @@
-import { EventLogs } from "@vechain/sdk-network";
+import { EventCriteria, EventLogs } from "@vechain/sdk-network";
 import { LogDescription } from "ethers";
 import { Subject } from "rxjs";
 
@@ -36,10 +36,7 @@ export interface EventProcessorOptions {
 }
 
 export interface EventPollingServiceConfig {
-  contracts: {
-    lottery: string;
-    xAllocationVoting?: string;
-  };
+  criteriaSet: EventCriteria[];
   network: "mainnet" | "testnet";
   startingBlock?: number;
   pollingInterval?: number;

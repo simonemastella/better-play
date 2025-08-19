@@ -6,8 +6,8 @@ import {
   integer,
   primaryKey,
 } from "drizzle-orm/pg-core";
-import { users } from "./users";
-import { rounds } from "./rounds";
+import { users } from "./users.js";
+import { rounds } from "./rounds.js";
 
 export const tickets = pgTable(
   "tickets",

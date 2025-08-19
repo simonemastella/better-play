@@ -1,7 +1,11 @@
 import { z, loadEnv, dotEnvSource, envVarsSource } from "@better-play/shared";
 
 const envSchema = z.object({
-  VECHAIN_PRIVATE_KEY: z.string(),
+  MNEMONIC: z.string(),
+  X_ALLOCATION_VOTING_ADDRESS: z.string(),
+  PAYMENT_TOKEN_ADDRESS: z.string(),
+  INITIAL_TICKET_PRICE: z.string(),
+  INITIAL_PRIZES: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

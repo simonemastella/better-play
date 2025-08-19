@@ -1,10 +1,10 @@
 import { relations } from "drizzle-orm";
-import { users } from "./users";
-import { rounds } from "./rounds";
-import { tickets } from "./tickets";
-import { winners } from "./winners";
-import { events } from "./events";
-import { userRoles } from "./user-roles";
+import { users } from "./users.js";
+import { rounds } from "./rounds.js";
+import { tickets } from "./tickets.js";
+import { winners } from "./winners.js";
+import { events } from "./events.js";
+import { userRoles } from "./user-roles.js";
 
 export const usersRelations = relations(users, ({ many }) => ({
   tickets: many(tickets),

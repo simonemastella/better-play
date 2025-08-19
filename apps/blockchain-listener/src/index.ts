@@ -14,45 +14,46 @@ import {
   type NewRound,
   type Winner,
   type NewWinner,
-} from '@better-play/database';
+} from "@better-play/database";
 
 // Import Worker 1 (Event Polling Service)
-import { EventPollingService } from './event-polling-service.js';
-import { VeChainEventPoller } from './vechain-event-poller.js';
+import { EventPollingService } from "./event-polling-service.js";
+import { VeChainEventPoller } from "./vechain-event-poller.js";
 
 // Import Worker 2 (Event Processor)
-import { EventProcessor } from './event-processor.js';
+import { EventProcessor } from "./event-processor.js";
 
 // Import types
-import type { EventPollingServiceConfig } from './types/events.js';
-import { env } from './env.js';
-
-console.log('Blockchain Listener starting...');
+import type { EventPollingServiceConfig } from "./types/events.js";
+import { env } from "./env.js";
+import { XAllocationVoting } from "@vechain/vebetterdao-contracts";
+import { ethers, keccak256, toUtf8Bytes } from "ethers";
+console.log("Blockchain Listener starting...");
 
 // Start the main service
 main().catch((error) => {
-  console.error('❌ Failed to start:', error);
+  console.error("❌ Failed to start:", error);
   process.exit(1);
 });
 
 async function main() {
-  console.log('Blockchain Listener initialized with:');
-  console.log('- Worker 1: EventPollingService (RxJS-based event puller)');
-  console.log('- Worker 2: EventProcessor (Handler-based event processor)');
-  console.log('- Database models imported');
-  
+  console.log("Blockchain Listener initialized with:");
+  console.log("- Worker 1: EventPollingService (RxJS-based event puller)");
+  console.log("- Worker 2: EventProcessor (Handler-based event processor)");
+  console.log("- Database models imported");
+
   // Start the event polling service
   const service = await startEventPolling();
-  
+
   // Keep the process running
-  process.on('SIGINT', async () => {
-    console.log('\n⏹️  Shutting down...');
+  process.on("SIGINT", async () => {
+    console.log("\n⏹️  Shutting down...");
     await service.stop();
     process.exit(0);
   });
-  
-  process.on('SIGTERM', async () => {
-    console.log('\n⏹️  Shutting down...');
+
+  process.on("SIGTERM", async () => {
+    console.log("\n⏹️  Shutting down...");
     await service.stop();
     process.exit(0);
   });
@@ -60,28 +61,44 @@ async function main() {
 
 // Example usage of Worker 1
 async function startEventPolling() {
-  const config = {
-    contracts: {
-      lottery: env.LOTTERY_CONTRACT_ADDRESS,
-    },
+  const roundCreatedEvent = XAllocationVoting.abi.find(
+    (e) => e.type == "event" && e.name == "RoundCreated"
+  )!;
+
+  // Build event signature from ABI
+  const eventSignature = `${roundCreatedEvent.name}(${roundCreatedEvent.inputs
+    .map((input) => input.type)
+    .join(",")})`;
+  console.log("Event signature:", eventSignature);
+
+  const config: EventPollingServiceConfig = {
+    criteriaSet: [
+      {
+        address: env.LOTTERY_CONTRACT_ADDRESS,
+      },
+      {
+        address: XAllocationVoting.address[env.NETWORK],
+        topic0: keccak256(toUtf8Bytes(eventSignature)), // RoundCreated event signature from ABI
+      },
+    ],
     network: env.NETWORK,
     startingBlock: env.STARTING_BLOCK,
     pollingInterval: env.POLLING_INTERVAL,
     processorOptions: {
       retryCount: 3,
       retryDelay: 1000,
-    }
+    },
   };
-
+  console.log(config.criteriaSet);
   const pollingService = new EventPollingService(config);
-  
+
   // Register handlers with Worker 2 before starting
   // const processor = pollingService.getProcessor();
   // processor.registerHandler(new LotteryEventHandler());
-  
+
   await pollingService.start();
-  console.log('Event polling started!');
-  
+  console.log("Event polling started!");
+
   return pollingService;
 }
 

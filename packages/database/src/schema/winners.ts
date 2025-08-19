@@ -1,6 +1,6 @@
 import { pgTable, text, bigint, integer, primaryKey } from "drizzle-orm/pg-core";
-import { rounds } from "./rounds";
-import { users } from "./users";
+import { rounds } from "./rounds.js";
+import { users } from "./users.js";
 
 export const winners = pgTable("winners", {
   roundId: integer("round_id")

@@ -1,10 +1,14 @@
-import { Subject, concatMap, retry, catchError, EMPTY } from 'rxjs';
-import { events, db } from '@better-play/database';
-import { eq, and, desc } from 'drizzle-orm';
+import { Subject, concatMap, retry, catchError, EMPTY } from "rxjs";
+import { events, db } from "@better-play/database";
+import { eq, and, desc } from "drizzle-orm";
 
-import { EventProcessor } from './event-processor.js';
-import { EventPayload, PollingStrategy, EventPollingServiceConfig } from './types/events.js';
-import { VeChainEventPoller } from './vechain-event-poller.js';
+import { EventProcessor } from "./event-processor.js";
+import {
+  EventPayload,
+  PollingStrategy,
+  EventPollingServiceConfig,
+} from "./types/events.js";
+import { VeChainEventPoller } from "./vechain-event-poller.js";
 
 export class EventPollingService {
   private eventBus = new Subject<EventPayload>();
@@ -14,11 +18,7 @@ export class EventPollingService {
 
   constructor(private config: EventPollingServiceConfig) {
     this.processor = new EventProcessor();
-    const contracts = [config.contracts.lottery];
-    if (config.contracts.xAllocationVoting) {
-      contracts.push(config.contracts.xAllocationVoting);
-    }
-    const criteriaSet = contracts.map(address => ({ address: address.toLowerCase() }));
+    const criteriaSet = config.criteriaSet;
     this.poller = new VeChainEventPoller(
       config.network,
       criteriaSet,
@@ -33,7 +33,7 @@ export class EventPollingService {
     }
 
     this.isRunning = true;
-    console.log('Starting EventPollingService');
+    console.log("Starting EventPollingService");
 
     // Get last processed position
     const startingBlock = await this.getLastProcessedBlock();
@@ -53,17 +53,17 @@ export class EventPollingService {
           delay: this.config.processorOptions?.retryDelay || 1000,
         }),
         catchError((error) => {
-          console.log({ error }, 'Event processing failed after retries');
+          console.log({ error }, "Event processing failed after retries");
           // Continue processing other events
           return EMPTY;
         })
       )
       .subscribe({
-        complete: () => console.log('Event bus processing complete'),
-        error: (error) => console.log({ error }, 'Fatal error in event bus'),
+        complete: () => console.log("Event bus processing complete"),
+        error: (error) => console.log({ error }, "Fatal error in event bus"),
       });
 
-    console.log('EventPollingService started successfully');
+    console.log("EventPollingService started successfully");
   }
 
   async stop(): Promise<void> {
@@ -71,7 +71,7 @@ export class EventPollingService {
       return;
     }
 
-    console.log('Stopping EventPollingService');
+    console.log("Stopping EventPollingService");
     this.isRunning = false;
 
     // Stop polling
@@ -81,7 +81,7 @@ export class EventPollingService {
     this.eventBus.complete();
     this.eventBus = new Subject<EventPayload>();
 
-    console.log('EventPollingService stopped');
+    console.log("EventPollingService stopped");
   }
 
   private async getLastProcessedBlock(): Promise<number> {
@@ -90,23 +90,30 @@ export class EventPollingService {
       const lastEvent = await db
         .select({ blockNumber: events.blockNumber })
         .from(events)
-        .where(eq(events.eventName, 'TicketPurchased')) // Or any lottery event
+        .where(eq(events.eventName, "TicketPurchased")) // Or any lottery event
         .orderBy(desc(events.blockNumber))
         .limit(1);
 
       if (!lastEvent.length) {
         // No processed events, start from configured block
         const startBlock = this.config.startingBlock || 0;
-        console.log(`No previous events found, starting from configured block ${startBlock}`);
+        console.log(
+          `No previous events found, starting from configured block ${startBlock}`
+        );
         return startBlock;
       }
 
       // Start from the next block after the last processed one
       const startBlock = Number(lastEvent[0].blockNumber) + 1;
-      console.log(`Resuming from block: ${startBlock} (last processed: ${lastEvent[0].blockNumber})`);
+      console.log(
+        `Resuming from block: ${startBlock} (last processed: ${lastEvent[0].blockNumber})`
+      );
       return startBlock;
     } catch (error) {
-      console.log({ error }, 'Failed to get last processed block, starting from configured block');
+      console.log(
+        { error },
+        "Failed to get last processed block, starting from configured block"
+      );
       return this.config.startingBlock || 0;
     }
   }
@@ -117,13 +124,10 @@ export class EventPollingService {
         .select({ txId: events.txId })
         .from(events)
         .where(
-          and(
-            eq(events.txId, event.txId),
-            eq(events.logIndex, event.logIndex)
-          )
+          and(eq(events.txId, event.txId), eq(events.logIndex, event.logIndex))
         )
         .limit(1);
-      
+
       return existingEvent.length > 0;
     } catch (error) {
       console.log(
@@ -131,9 +135,9 @@ export class EventPollingService {
           error,
           txId: event.txId,
           blockNumber: event.blockNumber,
-          logIndex: event.logIndex
+          logIndex: event.logIndex,
         },
-        'Failed to check event existence'
+        "Failed to check event existence"
       );
       // On error, assume event doesn't exist to avoid skipping events
       return false;

@@ -1,8 +1,13 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "@vechain/hardhat-vechain";
 import { MAINNET_URL, TESTNET_URL } from "@vechain/sdk-network";
+import { Hex, Mnemonic } from "@vechain/sdk-core";
 import { env } from "./src/env";
+import "@vechain/sdk-hardhat-plugin";
+
+const vechain_pk = Hex.of(
+  Mnemonic.toPrivateKey(env.MNEMONIC.split(" "))
+).toString();
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -17,12 +22,12 @@ const config: HardhatUserConfig = {
   networks: {
     vechain_testnet: {
       url: TESTNET_URL,
-      accounts: [env.VECHAIN_PRIVATE_KEY],
+      accounts: [vechain_pk],
       gas: 10000000,
     },
     vechain_mainnet: {
       url: MAINNET_URL,
-      accounts: [env.VECHAIN_PRIVATE_KEY],
+      accounts: [vechain_pk],
       gas: 10000000,
     },
   },

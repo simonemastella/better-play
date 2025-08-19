@@ -16,7 +16,6 @@ export class VeChainEventPoller implements PollingStrategy {
   private isPolling = false;
   private pollingTimeout?: NodeJS.Timeout;
   private consecutiveFailures = 0;
-  private abortController?: AbortController;
 
   constructor(
     network: "mainnet" | "testnet",
@@ -39,7 +38,6 @@ export class VeChainEventPoller implements PollingStrategy {
 
   async startPolling(fromBlock: number): Promise<void> {
     this.isPolling = true;
-    this.abortController = new AbortController();
     let nextBlock = fromBlock;
 
     while (this.isPolling) {
@@ -80,10 +78,6 @@ export class VeChainEventPoller implements PollingStrategy {
   stopPolling(): void {
     this.isPolling = false;
 
-    // Abort any ongoing operations
-    this.abortController?.abort();
-    this.abortController = undefined;
-
     if (this.pollingTimeout) {
       clearTimeout(this.pollingTimeout);
     }
@@ -106,6 +100,8 @@ export class VeChainEventPoller implements PollingStrategy {
 
     // Convert block ref to number (first 8 hex chars after 0x)
     const toBlock = bestBlock.number;
+
+    console.log(`Fetching events from block ${fromBlock} to ${toBlock}`);
 
     // Don't process beyond current block
     if (fromBlock > toBlock) {
@@ -169,17 +165,10 @@ export class VeChainEventPoller implements PollingStrategy {
   }
 
   private cancellable<T>(promise: Promise<T>): Promise<T> {
-    if (!this.abortController) {
-      return promise;
+    if (!this.isPolling) {
+      return Promise.reject(new Error("Operation aborted"));
     }
-
-    const abortPromise = new Promise<never>((_, reject) => {
-      this.abortController!.signal.addEventListener("abort", () => {
-        reject(new Error("Operation aborted"));
-      });
-    });
-
-    return Promise.race([promise, abortPromise]);
+    return promise;
   }
 
   private sleep(ms: number): Promise<void> {
