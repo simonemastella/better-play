@@ -1,5 +1,12 @@
-import { Interface } from "ethers";
+import { Interface, LogDescription } from "ethers";
 import { EventPayload } from "../types/events.js";
+import { Lottery__factory } from "packages/contracts/dist/typechain-types/index.js";
+
+// Extract event names as a type from ABI
+type LotteryEventName = Extract<
+  (typeof Lottery__factory.abi)[number],
+  { type: "event" }
+>["name"];
 
 export class Lottery {
   static processEvent(payload: EventPayload, iface: Interface): void {
@@ -12,8 +19,8 @@ export class Lottery {
 
     console.log(`[Lottery] ${parsed.name} at block ${payload.blockNumber}`);
 
-    switch (parsed.name) {
-      case "TicketPurchased":
+    switch (parsed.name as LotteryEventName) {
+      case "RoundCreated":
         console.log("  Ticket purchased:", parsed.args);
         // TODO: Save to database
         break;
@@ -27,6 +34,9 @@ export class Lottery {
         console.log("  Prize claimed:", parsed.args);
         break;
       case "RoleGranted":
+        console.log("  RoleGranted:");
+        break;
+      case "RoleRevoked":
         console.log("  RoleGranted:");
         break;
 

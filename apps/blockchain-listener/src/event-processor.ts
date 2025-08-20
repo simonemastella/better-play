@@ -5,17 +5,15 @@ import { EventPayload } from "./types/events.js";
 import { env } from "./env.js";
 import { Lottery } from "./contracts/lottery.js";
 import { XAllocationVoting } from "./contracts/xallocation-voting.js";
+import { db, events } from "@better-play/database";
+import { eq, and } from "drizzle-orm";
 
 export class EventProcessor {
   private contracts: Record<string, any>;
 
   constructor() {
-    const roundCreatedEvent = XAllocationVotingABI.abi.find(
-      (e) => e.type == "event" && e.name == "RoundCreated"
-    )!;
-    const eventSignature = `${roundCreatedEvent.name}(${roundCreatedEvent.inputs
-      .map((input) => input.type)
-      .join(",")})`;
+    const roundCreatedEvent =
+      XAllocationVotingABI.interface.getEvent("RoundCreated");
 
     this.contracts = {
       [env.LOTTERY_CONTRACT_ADDRESS.toLowerCase()]: {
@@ -35,7 +33,7 @@ export class EventProcessor {
         criteria: [
           {
             address: XAllocationVotingABI.address[env.NETWORK].toLowerCase(),
-            topic0: keccak256(toUtf8Bytes(eventSignature)),
+            topic0: roundCreatedEvent.topicHash,
           },
         ],
       },
@@ -58,6 +56,39 @@ export class EventProcessor {
       return;
     }
 
+    // Check if event already exists in database
+    const eventExists = await this.eventExists(payload);
+    if (eventExists) {
+      console.log(
+        `Event already processed: ${payload.txId}:${payload.logIndex}`
+      );
+      return;
+    }
+
     contract.handler.processEvent(payload, contract.interface);
+  }
+
+  private async eventExists(payload: EventPayload): Promise<boolean> {
+    try {
+      const existingEvent = await db
+        .select({ txId: events.txId })
+        .from(events)
+        .where(
+          and(
+            eq(events.txId, payload.txId),
+            eq(events.logIndex, payload.logIndex)
+          )
+        )
+        .limit(1);
+
+      return existingEvent.length > 0;
+    } catch (error) {
+      console.error(
+        `Failed to check event existence for ${payload.txId}:${payload.logIndex}:`,
+        error
+      );
+      // On error, assume event doesn't exist to avoid skipping events
+      return false;
+    }
   }
 }

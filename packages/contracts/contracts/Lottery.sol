@@ -40,6 +40,12 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
     mapping(uint256 roundId => RoundResult result) private roundResults;
 
     // Events
+    event RoundCreated(
+        uint256 indexed roundId,
+        uint256 ticketPrice,
+        uint256[] prizes,
+        uint256 endBlock
+    );
     event TicketPurchased(
         uint256 indexed ticketId,
         address indexed buyer,
@@ -253,6 +259,13 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         require(xAllocationVoting.hasStarted(roundId), "Round not started");
         roundStats[roundId].endBlock = xAllocationVoting.roundDeadline(roundId);
         roundDetails[roundId] = nextRoundDetails;
+
+        emit RoundCreated(
+            roundId,
+            roundDetails[roundId].ticketPrice,
+            roundDetails[roundId].prizes,
+            roundStats[roundId].endBlock
+        );
     }
 
     function _distributePrizes(
