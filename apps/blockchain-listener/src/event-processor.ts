@@ -24,6 +24,8 @@ export class EventProcessor {
           {
             address: env.LOTTERY_CONTRACT_ADDRESS.toLowerCase(),
           },
+          // You can have multiple contract that can be handled by the same class handler
+          // { address: env.LOTTERY_CONTRACT_ADDRESS_BIS.toLowerCase() },
         ],
       },
       [XAllocationVotingABI.address[env.NETWORK].toLowerCase()]: {
@@ -49,8 +51,6 @@ export class EventProcessor {
   async processEvent(payload: EventPayload): Promise<void> {
     const address = payload.contractAddress.toLowerCase();
     const contract = this.contracts[address];
-    console.warn(`contract: ${address}`);
-
     if (!contract) {
       console.warn(`Unknown contract: ${address}`);
       return;
@@ -60,7 +60,7 @@ export class EventProcessor {
     const eventExists = await this.eventExists(payload);
     if (eventExists) {
       console.log(
-        `Event already processed: ${payload.txId}:${payload.logIndex}`
+        `Skipping event already processed: ${payload.txId}:${payload.logIndex}`
       );
       return;
     }

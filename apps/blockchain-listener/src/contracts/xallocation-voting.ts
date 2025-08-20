@@ -25,10 +25,6 @@ export class XAllocationVoting {
       throw Error(`Failed to parse XAllocationVoting event`);
     }
 
-    console.log(
-      `[XAllocationVoting] ${parsed.name} at block ${payload.blockNumber}`
-    );
-
     switch (parsed.name as XAllocationVotingEventName) {
       case "RoundCreated":
         await this.handleRoundCreated(
@@ -38,7 +34,7 @@ export class XAllocationVoting {
         break;
 
       default:
-        console.log(`  Unhandled XAllocationVoting event: ${parsed.name}`);
+        console.log(`Unhandled XAllocationVoting event: ${parsed.name}`);
     }
   }
 

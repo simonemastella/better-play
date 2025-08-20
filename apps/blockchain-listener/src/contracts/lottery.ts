@@ -21,8 +21,21 @@ export class Lottery {
 
     switch (parsed.name as LotteryEventName) {
       case "RoundCreated":
+        console.log("  Round created:", parsed.args);
+        // TODO: Save to database
+        break;
+
+      case "TicketPurchased":
         console.log("  Ticket purchased:", parsed.args);
         // TODO: Save to database
+        break;
+
+      case "AmountIncreased":
+        console.log("  Amount increased:", parsed.args);
+        break;
+
+      case "NextRoundDetailsUpdated":
+        console.log("  Next round details updated:", parsed.args);
         break;
 
       case "RoundRevealed":
@@ -34,14 +47,14 @@ export class Lottery {
         console.log("  Prize claimed:", parsed.args);
         break;
       case "RoleGranted":
-        console.log("  RoleGranted:");
+        console.log("  Prize claimed:", parsed.args);
         break;
       case "RoleRevoked":
-        console.log("  RoleGranted:");
+        console.log("  Prize claimed:", parsed.args);
         break;
 
       default:
-        console.error(`  Unhandled Lottery event: ${parsed.name}`);
+        console.log(`  Unhandled Lottery event: ${parsed.name}`);
     }
   }
 }
