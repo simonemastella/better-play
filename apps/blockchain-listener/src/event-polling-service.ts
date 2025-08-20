@@ -1,6 +1,7 @@
 import { Subject, concatMap, retry, catchError, EMPTY } from "rxjs";
 import { events, db } from "@better-play/database";
 import { eq, and, desc } from "drizzle-orm";
+import { EventCriteria } from "@vechain/sdk-network";
 
 import { EventProcessor } from "./event-processor.js";
 import {
@@ -18,7 +19,10 @@ export class EventPollingService {
 
   constructor(private config: EventPollingServiceConfig) {
     this.processor = new EventProcessor();
-    const criteriaSet = config.criteriaSet;
+
+    // Get criteriaSet from EventProcessor (includes topic filters)
+    const criteriaSet: EventCriteria[] = this.processor.getCriteria();
+
     this.poller = new VeChainEventPoller(
       config.network,
       criteriaSet,
@@ -49,8 +53,8 @@ export class EventPollingService {
           await this.processor.processEvent(event);
         }),
         retry({
-          count: this.config.processorOptions?.retryCount || 3,
-          delay: this.config.processorOptions?.retryDelay || 1000,
+          count: this.config.pollerOptions?.retryCount || 3,
+          delay: this.config.pollerOptions?.retryDelay || 1000,
         }),
         catchError((error) => {
           console.log({ error }, "Event processing failed after retries");

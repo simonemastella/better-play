@@ -1,5 +1,5 @@
 import { EventCriteria, EventLogs } from "@vechain/sdk-network";
-import { LogDescription } from "ethers";
+import { LogDescription, Interface } from "ethers";
 import { Subject } from "rxjs";
 
 export interface EventPayload {
@@ -16,7 +16,6 @@ export interface EventPayload {
 export interface PollingStrategy {
   startPolling(fromBlock: number): Promise<void>;
   stopPolling(): void;
-  setCriteria(criteriaSet: any[]): void;
 }
 
 export interface EventHandler {
@@ -29,16 +28,15 @@ export interface PostEventAction {
   execute(payload: EventPayload): Promise<void>;
 }
 
-export interface EventProcessorOptions {
+export interface EventPollerOptions {
   retryCount?: number;
   retryDelay?: number;
   batchSize?: number;
 }
 
 export interface EventPollingServiceConfig {
-  criteriaSet: EventCriteria[];
   network: "mainnet" | "testnet";
   startingBlock?: number;
   pollingInterval?: number;
-  processorOptions?: EventProcessorOptions;
+  pollerOptions?: EventPollerOptions;
 }

@@ -34,6 +34,7 @@ export class VeChainEventPoller implements PollingStrategy {
       },
       "VeChain event poller initialized"
     );
+    console.log(this.criteriaSet);
   }
 
   async startPolling(fromBlock: number): Promise<void> {
@@ -83,10 +84,6 @@ export class VeChainEventPoller implements PollingStrategy {
     }
 
     this.consecutiveFailures = 0;
-  }
-
-  setCriteria(criteriaSet: EventCriteria[]): void {
-    this.criteriaSet = criteriaSet;
   }
 
   private async fetchEvents(fromBlock: number): Promise<{ toBlock: number }> {

@@ -2,6 +2,8 @@
   "name": "@better-play/contracts",
   "version": "1.0.0",
   "private": true,
+  "main": "dist/typechain-types/index.js",
+  "types": "dist/typechain-types/index.d.ts",
   "scripts": {
     "compile": "hardhat compile",
     "build": "yarn clean && yarn compile && tsc",

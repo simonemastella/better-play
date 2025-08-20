@@ -15,19 +15,18 @@ import {
   type Winner,
   type NewWinner,
 } from "@better-play/database";
-
 // Import Worker 1 (Event Polling Service)
 import { EventPollingService } from "./event-polling-service.js";
 import { VeChainEventPoller } from "./vechain-event-poller.js";
 
-// Import Worker 2 (Event Processor)
+// Import Worker 2 (Event Processor) - now created automatically from contractConfigs
 import { EventProcessor } from "./event-processor.js";
 
 // Import types
 import type { EventPollingServiceConfig } from "./types/events.js";
 import { env } from "./env.js";
-import { XAllocationVoting } from "@vechain/vebetterdao-contracts";
-import { ethers, keccak256, toUtf8Bytes } from "ethers";
+
+
 console.log("Blockchain Listener starting...");
 
 // Start the main service
@@ -61,35 +60,12 @@ async function main() {
 
 // Example usage of Worker 1
 async function startEventPolling() {
-  const roundCreatedEvent = XAllocationVoting.abi.find(
-    (e) => e.type == "event" && e.name == "RoundCreated"
-  )!;
-
-  // Build event signature from ABI
-  const eventSignature = `${roundCreatedEvent.name}(${roundCreatedEvent.inputs
-    .map((input) => input.type)
-    .join(",")})`;
-  console.log("Event signature:", eventSignature);
-
   const config: EventPollingServiceConfig = {
-    criteriaSet: [
-      {
-        address: env.LOTTERY_CONTRACT_ADDRESS,
-      },
-      {
-        address: XAllocationVoting.address[env.NETWORK],
-        topic0: keccak256(toUtf8Bytes(eventSignature)), // RoundCreated event signature from ABI
-      },
-    ],
     network: env.NETWORK,
     startingBlock: env.STARTING_BLOCK,
     pollingInterval: env.POLLING_INTERVAL,
-    processorOptions: {
-      retryCount: 3,
-      retryDelay: 1000,
-    },
   };
-  console.log(config.criteriaSet);
+  console.log("Starting event polling...");
   const pollingService = new EventPollingService(config);
 
   // Register handlers with Worker 2 before starting
