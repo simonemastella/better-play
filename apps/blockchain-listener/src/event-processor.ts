@@ -65,7 +65,28 @@ export class EventProcessor {
       return;
     }
 
-    contract.handler.processEvent(payload, contract.interface);
+    // TODO add a retry mechanism for transient db failures...
+    // Process event within a transaction
+    await db.transaction(async (tx) => {
+      const processedEvent = await contract.handler.processEvent(
+        payload,
+        contract.interface,
+        tx
+      );
+
+      if (processedEvent) {
+        // Insert the event into the database
+        await tx.insert(events).values({
+          txId: payload.txId,
+          logIndex: payload.logIndex,
+          eventName: processedEvent.eventName,
+          blockNumber: payload.blockNumber,
+          decoded: processedEvent.decoded,
+        });
+
+        console.log(`  ${processedEvent.eventName} event saved to database`);
+      }
+    });
   }
 
   private async eventExists(payload: EventPayload): Promise<boolean> {
