@@ -5,7 +5,7 @@ import { EventPayload } from "./types/events.js";
 import { env } from "./env.js";
 import { Lottery } from "./contracts/lottery.js";
 import { XAllocationVoting } from "./contracts/xallocation-voting.js";
-import { db, events } from "@better-play/database";
+import { db, events, transactionWithRetry } from "@better-play/database";
 import { eq, and } from "drizzle-orm";
 
 export class EventProcessor {
@@ -65,9 +65,8 @@ export class EventProcessor {
       return;
     }
 
-    // TODO add a retry mechanism for transient db failures...
-    // Process event within a transaction
-    await db.transaction(async (tx) => {
+    // Process event within a transaction with automatic retry for transient errors
+    await transactionWithRetry(db, async (tx) => {
       const processedEvent = await contract.handler.processEvent(
         payload,
         contract.interface,

@@ -7,6 +7,9 @@ export const rounds = pgTable("rounds", {
   nextTicketId: bigint("next_ticket_id", { mode: "number" })
     .default(0)
     .notNull(),
+  prizePool: bigint("prize_pool", { mode: "number" })
+    .default(0)
+    .notNull(),
   endBlock: bigint("end_block", { mode: "number" }),
   revealed: boolean("revealed").default(false).notNull(),
 });

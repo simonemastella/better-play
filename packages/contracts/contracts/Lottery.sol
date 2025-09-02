@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IXAllocationVoting.sol";
 
 contract Lottery is AccessControl, ReentrancyGuard, Pausable {
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant TREASURER_ROLE = keccak256("TREASURER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -64,11 +63,6 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         uint256[] prizes,
         uint256 totalPrize
     );
-    event PrizeClaimed(
-        uint256 indexed roundId,
-        address indexed winner,
-        uint256 amount
-    );
 
     constructor(
         address _xAllocationVoting,
@@ -91,7 +85,6 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         require(totalPercentage == 10_000, "Prizes must sum to 10000 (100%)");
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(ADMIN_ROLE, msg.sender);
         _grantRole(OPERATOR_ROLE, msg.sender);
         _grantRole(TREASURER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
@@ -156,7 +149,7 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
     function setNextRoundDetails(
         uint256 _newPrice,
         uint256[] memory _newPrizes
-    ) external onlyRole(ADMIN_ROLE) {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_newPrice > 0, "Price must be greater than 0");
         require(_newPrizes.length > 0, "Prizes array cannot be empty");
 
@@ -279,7 +272,6 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
                     paymentToken.transfer(winners[i], prizesWon[i]),
                     "Prize transfer failed"
                 );
-                emit PrizeClaimed(roundId, winners[i], prizesWon[i]);
             }
         }
     }
