@@ -63,6 +63,11 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         uint256[] prizes,
         uint256 totalPrize
     );
+    event RandomnessFallbackUsed(
+        uint256 indexed roundId,
+        uint256 originalBlock,
+        uint256 fallbackBlock
+    );
 
     constructor(
         address _xAllocationVoting,
@@ -213,9 +218,21 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
         );
     }
 
-    function _getRandomness(uint256 roundId) internal view returns (bytes32) {
+    function _getRandomness(uint256 roundId) internal returns (bytes32) {
         bytes32 blockHash = blockhash(roundStats[roundId].endBlock);
-        require(blockHash != bytes32(0), "Block hash unavailable (too old)");
+
+        if (blockHash == bytes32(0)) {
+            // Fallback to current block - 1
+            blockHash = blockhash(block.number - 1);
+            // Emit event for monitoring
+            emit RandomnessFallbackUsed(
+                roundId,
+                roundStats[roundId].endBlock,
+                block.number - 1
+            );
+            require(blockHash != bytes32(0), "Current block hash unavailable");
+        }
+
         return blockHash;
     }
 
