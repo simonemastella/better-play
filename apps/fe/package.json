@@ -1,0 +1,47 @@
+{
+  "name": "@better-play/fe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@better-play/shared": "workspace:^",
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@tanstack/react-query": "^5.87.1",
+    "@tanstack/react-router": "^1.131.35",
+    "@vechain/sdk-network": "^2.0.5",
+    "@vechain/vechain-kit": "2.0.0-rc.5",
+    "clsx": "^2.1.0",
+    "framer-motion": "^12.23.12",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.2.0",
+    "valtio": "^2.1.7",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@tanstack/router-vite-plugin": "^1.131.35",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "buffer": "^6.0.3",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^7.1.4"
+  }
+}

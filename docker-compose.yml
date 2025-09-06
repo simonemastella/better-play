@@ -43,6 +43,25 @@ services:
       - ./apps/blockchain-listener:/app/apps/blockchain-listener:ro
       - ./packages:/app/packages:ro
 
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/fe/Dockerfile.dev
+    container_name: better-play-frontend
+    restart: unless-stopped
+    environment:
+      VITE_NODE_URL: ${VITE_NODE_URL:-https://testnet.vechain.org}
+      VITE_NETWORK: ${VITE_NETWORK:-test}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    networks:
+      - better-play-network
+    volumes:
+      - ./apps/fe:/app/apps/fe
+      - ./packages:/app/packages:ro
+      - /app/apps/fe/node_modules
+    command: yarn dev
+
 volumes:
   postgres-data:
     driver: local
