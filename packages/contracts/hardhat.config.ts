@@ -1,45 +1,25 @@
-import { HardhatUserConfig } from "hardhat/config";
+import type { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import { MAINNET_URL, TESTNET_URL } from "@vechain/sdk-network";
-import { Hex, Mnemonic } from "@vechain/sdk-core";
-import { env } from "./src/env";
+import { HDKey, Hex } from "@vechain/sdk-core";
 import "@vechain/sdk-hardhat-plugin";
+import { ethers } from "ethers";
 
-const vechain_pk = Hex.of(
-  Mnemonic.toPrivateKey(env.MNEMONIC.split(" "))
+import { env } from "./scripts/env";
+
+const vechain_pk_buff = Hex.of(
+  HDKey.fromMnemonic(env.MNEMONIC.split(" ")).deriveChild(0)
+    .privateKey!
 ).toString();
+console.log(env.MNEMONIC);
+const base_pk_buff = ethers.Wallet.fromPhrase(env.MNEMONIC).privateKey;
 
 const config: HardhatUserConfig = {
-  solidity: {
-    version: "0.8.20",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-      },
-    },
-  },
+  solidity: "0.8.28",
   networks: {
     vechain_testnet: {
-      url: TESTNET_URL,
-      accounts: [vechain_pk],
-      gas: 10000000,
+      url: "https://testnet.vechain.org",
+      accounts: [vechain_pk_buff],
     },
-    vechain_mainnet: {
-      url: MAINNET_URL,
-      accounts: [vechain_pk],
-      gas: 10000000,
-    },
-  },
-  typechain: {
-    outDir: "typechain-types",
-    target: "ethers-v6",
-  },
-  paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
   },
 };
 

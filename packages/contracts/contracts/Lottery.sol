@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -201,7 +201,7 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
             winners: winners,
             prizesWon: prizesWon
         });
-        _distributePrizes(_veBetterRoundId, winners, prizesWon);
+        _distributePrizes(winners, prizesWon);
 
         emit RoundRevealed(_veBetterRoundId, winners, prizesWon, totalPrize);
     }
@@ -279,7 +279,6 @@ contract Lottery is AccessControl, ReentrancyGuard, Pausable {
     }
 
     function _distributePrizes(
-        uint256 roundId,
         address[] memory winners,
         uint256[] memory prizesWon
     ) internal {

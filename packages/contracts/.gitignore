@@ -1,14 +1,18 @@
-# Local overrides for contracts package
-# (Most patterns are covered by root .gitignore)
+node_modules
+.env
+.env-loaded.json
 
-# Contract-specific build outputs
+# Hardhat files
 /cache
-/artifacts  
+/artifacts
+
+# TypeChain files
+/typechain
 /typechain-types
 
-# Local deployment files
-deployments/localhost/
-deployments/hardhat/
+# solidity-coverage files
+/coverage
+/coverage.json
 
-# Gas reports
-gas-report.txt
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337
