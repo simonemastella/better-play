@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useWallet, useWalletModal } from '@vechain/vechain-kit'
 import { AnimatedBackground } from '@/components/common/AnimatedBackground'
 import { truncateAddress } from '@/utils/format'
@@ -16,7 +16,7 @@ function HomePage() {
   }
   return (
     <div className="min-h-screen relative">
-      <AnimatedBackground />
+      <AnimatedBackground showDice={true} />
       
       {/* Hero Section */}
       <div className="relative z-10 pt-12 pb-8 md:pb-4 px-8 min-h-[300px] md:min-h-0">
@@ -71,12 +71,11 @@ function HomePage() {
                 <p className="text-gray-300 text-xs mb-3">
                   Win big with our decentralized lottery
                 </p>
-                <button 
-                  onClick={wallet.connection.isConnected ? () => console.log('Starting lottery game...') : handleWalletAction}
-                  className="btn-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 px-4 text-sm w-full"
-                >
-                  {wallet.connection.isConnected ? 'Play Now' : 'Connect to Play'}
-                </button>
+                <Link to="/lottery">
+                  <button className="btn-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 px-4 text-sm w-full">
+                    Play Now
+                  </button>
+                </Link>
               </div>
             </div>
 
@@ -139,7 +138,7 @@ function HomePage() {
             <div className="card bg-purple-900/40 backdrop-blur-sm border-purple-400/30 hover:border-purple-400/60 transition-colors">
               <div className="card-content text-center">
                 <div className="text-4xl font-bold text-purple-300 mb-2">156.7</div>
-                <div className="text-purple-100 text-sm font-medium">VET Won</div>
+                <div className="text-purple-100 text-sm font-medium">B3TR Won</div>
               </div>
             </div>
             <div className="card bg-orange-900/40 backdrop-blur-sm border-orange-400/30 hover:border-orange-400/60 transition-colors">

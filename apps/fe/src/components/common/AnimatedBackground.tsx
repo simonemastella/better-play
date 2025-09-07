@@ -5,6 +5,7 @@ import Draggable from 'react-draggable'
 
 interface AnimatedBackgroundProps {
   className?: string
+  showDice?: boolean
 }
 
 interface DraggableDiceProps {
@@ -282,10 +283,11 @@ function generateNonOverlappingPositions(count: number): Array<{ x: number; y: n
   return positions
 }
 
-export function AnimatedBackground({ className }: AnimatedBackgroundProps) {
-  const [diceCount, setDiceCount] = useState(() => calculateDiceCount())
+export function AnimatedBackground({ className, showDice = false }: AnimatedBackgroundProps) {
+  const [diceCount, setDiceCount] = useState(() => showDice ? calculateDiceCount() : 0)
   const [resizeKey, setResizeKey] = useState(0) // Force re-render of Draggable components
   const [diceData, setDiceData] = useState(() => {
+    if (!showDice) return []
     const count = calculateDiceCount()
     const positions = generateNonOverlappingPositions(count)
     return Array.from({ length: count }, (_, i) => ({
@@ -296,6 +298,8 @@ export function AnimatedBackground({ className }: AnimatedBackgroundProps) {
   })
 
   useEffect(() => {
+    if (!showDice) return
+
     let resizeTimeout: NodeJS.Timeout
 
     const handleResize = () => {
@@ -321,7 +325,7 @@ export function AnimatedBackground({ className }: AnimatedBackgroundProps) {
       window.removeEventListener('resize', handleResize)
       if (resizeTimeout) clearTimeout(resizeTimeout)
     }
-  }, [])
+  }, [showDice])
 
   return (
     <>
@@ -361,19 +365,21 @@ export function AnimatedBackground({ className }: AnimatedBackgroundProps) {
       </div>
 
       {/* Draggable 3D dice - positioned relative to content */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-50">
-        <AnimatePresence>
-          {diceData.map((dice) => (
-            <DraggableDice
-              key={`dice-${dice.id}-${resizeKey}`}
-              id={dice.id}
-              initialX={dice.x}
-              initialY={dice.y}
-              isVisible={dice.isVisible}
-            />
-          ))}
-        </AnimatePresence>
-      </div>
+      {showDice && (
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-50">
+          <AnimatePresence>
+            {diceData.map((dice) => (
+              <DraggableDice
+                key={`dice-${dice.id}-${resizeKey}`}
+                id={dice.id}
+                initialX={dice.x}
+                initialY={dice.y}
+                isVisible={dice.isVisible}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
     </>
   )
 }
