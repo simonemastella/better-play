@@ -1,18 +1,15 @@
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
-import { Buffer } from 'buffer'
+import { setupBrowserPolyfills } from '@/utils/polyfills'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 
 import './styles.css'
 
-// Polyfill Buffer for browser
-if (typeof window !== 'undefined') {
-  window.Buffer = Buffer;
-  (window as any).global = window;
-}
+// Setup browser polyfills
+setupBrowserPolyfills()
 
 // Create a new router instance
 const router = createRouter({
