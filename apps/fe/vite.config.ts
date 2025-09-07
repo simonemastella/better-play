@@ -1,19 +1,15 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { TanStackRouterVite } from '@tanstack/router-vite-plugin'
-import path from 'path'
+import tailwindcss from '@tailwindcss/vite';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import viteReact from '@vitejs/plugin-react';
+import { resolve } from 'node:path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
-    react(),
-    TanStackRouterVite(),
+    tanstackRouter({ target: 'react', autoCodeSplitting: true }), 
+    viteReact(), 
+    tailwindcss()
   ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      buffer: 'buffer',
-    },
-  },
   server: {
     host: '0.0.0.0',
     port: 5173,
@@ -22,8 +18,14 @@ export default defineConfig({
       usePolling: true,
     },
   },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+      buffer: 'buffer',
+    },
+  },
   define: {
     global: 'globalThis',
     process: { env: {} },
   },
-})
+});

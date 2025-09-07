@@ -1,47 +1,44 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { VeChainKitProvider } from "@vechain/vechain-kit";
-import { ChakraProvider } from "@chakra-ui/react";
-import { TransactionProvider } from "./context/TransactionContext";
-import "./index.css";
-import { routeTree } from "./routeTree.gen";
+import { StrictMode } from 'react'
+import ReactDOM from 'react-dom/client'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { Buffer } from 'buffer'
 
-const queryClient = new QueryClient();
+// Import the generated route tree
+import { routeTree } from './routeTree.gen'
 
-const router = createRouter({ routeTree });
+import './styles.css'
 
-declare module "@tanstack/react-router" {
+// Polyfill Buffer for browser
+if (typeof window !== 'undefined') {
+  window.Buffer = Buffer;
+  (window as any).global = window;
+}
+
+// Create a new router instance
+const router = createRouter({
+  routeTree,
+  context: {},
+  defaultPreload: 'intent',
+  scrollRestoration: true,
+  defaultStructuralSharing: true,
+  defaultPreloadStaleTime: 0,
+})
+
+// Register the router instance for type safety
+declare module '@tanstack/react-router' {
   interface Register {
-    router: typeof router;
+    router: typeof router
   }
 }
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <ChakraProvider>
-      <VeChainKitProvider
-        dappKit={{}}
-        network={{
-          type: "test",
-        }}
-        loginMethods={[
-          { method: "vechain", gridColumn: 4 },
-          { method: "dappkit", gridColumn: 4 },
-          { method: "ecosystem", gridColumn: 4 },
-        ]}
-        feeDelegation={{
-          delegatorUrl: "https://sponsor-testnet.vechain.energy/by/90",
-          delegateAllTransactions: false,
-        }}
-      >
-        <TransactionProvider>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </TransactionProvider>
-      </VeChainKitProvider>
-    </ChakraProvider>
-  </React.StrictMode>
-);
+// Render the app
+const rootElement = document.getElementById('root')
+if (rootElement && !rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement)
+  root.render(
+    <StrictMode>
+      <RouterProvider router={router} />
+    </StrictMode>,
+  )
+}
+
