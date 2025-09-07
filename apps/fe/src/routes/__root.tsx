@@ -31,7 +31,7 @@ function Root() {
       <QueryClientProvider client={queryClient}>
         <QueryErrorBoundary>
           <VeChainKitProvider {...vechainConfig}>
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen">
               <Outlet />
             </div>
           </VeChainKitProvider>
