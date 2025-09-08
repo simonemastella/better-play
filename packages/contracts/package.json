@@ -34,7 +34,7 @@
     "coverage": "yarn hardhat coverage",
     "ignition": "yarn hardhat ignition",
     "script": "yarn hardhat run",
-    "build": "yarn hardhat compile && yarn tsc --emitDeclarationOnly --outDir dist"
+    "build": "yarn hardhat compile && yarn tsc"
   },
   "dependencies": {
     "@better-play/shared": "workspace:*",

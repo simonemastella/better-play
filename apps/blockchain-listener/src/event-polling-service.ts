@@ -1,6 +1,6 @@
-import { Subject, concatMap, retry, catchError, EMPTY } from "rxjs";
+import { Subject, concatMap, retry, catchError, EMPTY, type Subscription } from "rxjs";
 import { events, db } from "@better-play/database";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { EventCriteria } from "@vechain/sdk-network";
 
 import { EventProcessor } from "./event-processor.js";
@@ -16,6 +16,7 @@ export class EventPollingService {
   private poller: PollingStrategy;
   private processor: EventProcessor;
   private isRunning = false;
+  private subscription?: Subscription;
 
   constructor(private config: EventPollingServiceConfig) {
     this.processor = new EventProcessor();
@@ -47,7 +48,7 @@ export class EventPollingService {
     this.poller.startPolling(startingBlock);
 
     // Process events sequentially with RxJS
-    this.eventBus
+    this.subscription = this.eventBus
       .pipe(
         concatMap(async (event) => {
           await this.processor.processEvent(event);
@@ -80,6 +81,10 @@ export class EventPollingService {
 
     // Stop polling
     this.poller.stopPolling();
+
+    // Unsubscribe from RxJS subscription to prevent memory leaks
+    this.subscription?.unsubscribe();
+    this.subscription = undefined;
 
     // Complete the subject
     this.eventBus.complete();
@@ -119,32 +124,6 @@ export class EventPollingService {
         "Failed to get last processed block, starting from configured block"
       );
       return this.config.startingBlock || 0;
-    }
-  }
-
-  private async eventExists(event: EventPayload): Promise<boolean> {
-    try {
-      const existingEvent = await db
-        .select({ txId: events.txId })
-        .from(events)
-        .where(
-          and(eq(events.txId, event.txId), eq(events.logIndex, event.logIndex))
-        )
-        .limit(1);
-
-      return existingEvent.length > 0;
-    } catch (error) {
-      console.log(
-        {
-          error,
-          txId: event.txId,
-          blockNumber: event.blockNumber,
-          logIndex: event.logIndex,
-        },
-        "Failed to check event existence"
-      );
-      // On error, assume event doesn't exist to avoid skipping events
-      return false;
     }
   }
 

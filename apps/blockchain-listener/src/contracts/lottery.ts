@@ -1,6 +1,6 @@
 import { Interface } from "ethers";
 import { EventPayload } from "../types/events.js";
-import type { TypedEventLog } from "packages/contracts/dist/typechain-types/common.js";
+import type { TypedEventLog } from "@better-play/contracts";
 import type {
   AmountIncreasedEvent,
   NextRoundDetailsUpdatedEvent,
@@ -9,22 +9,21 @@ import type {
   RoundCreatedEvent,
   RoundRevealedEvent,
   TicketPurchasedEvent,
-} from "packages/contracts/dist/typechain-types/contracts/Lottery.js";
+} from "@better-play/contracts";
 import type { ProcessedEvent } from "./xallocation-voting.js";
-import { Lottery__factory } from "packages/contracts/dist/typechain-types/index.js";
-import { 
-  db, 
-  rounds, 
-  tickets, 
-  users, 
-  userRoles, 
-  UserRoleType, 
-  winners as winnersTable
+import { Lottery__factory } from "@better-play/contracts";
+import {
+  db,
+  rounds,
+  tickets,
+  users,
+  userRoles,
+  UserRoleType,
+  winners as winnersTable,
 } from "@better-play/database";
 import { eq, sql, and } from "drizzle-orm";
 
 type TransactionClient = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
 type LotteryEventName = Extract<
   (typeof Lottery__factory.abi)[number],
   { type: "event" }
@@ -39,10 +38,14 @@ type EventHandler = (
 
 // Map role bytes32 hashes to role names
 const ROLE_MAPPING: Record<string, UserRoleType> = {
-  "0x0000000000000000000000000000000000000000000000000000000000000000": "DEFAULT_ADMIN_ROLE",
-  "0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929": "OPERATOR_ROLE",
-  "0x3496e2e73c4d42b75d702e60d9e48102720b8691234415963a5a857b86425d07": "TREASURER_ROLE",
-  "0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a": "PAUSER_ROLE",
+  "0x0000000000000000000000000000000000000000000000000000000000000000":
+    "DEFAULT_ADMIN_ROLE",
+  "0x97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b929":
+    "OPERATOR_ROLE",
+  "0x3496e2e73c4d42b75d702e60d9e48102720b8691234415963a5a857b86425d07":
+    "TREASURER_ROLE",
+  "0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a":
+    "PAUSER_ROLE",
 };
 
 export class Lottery {
@@ -131,10 +134,7 @@ export class Lottery {
     });
 
     // Ensure user exists (insert if not exists)
-    await tx
-      .insert(users)
-      .values({ address: buyer })
-      .onConflictDoNothing();
+    await tx.insert(users).values({ address: buyer }).onConflictDoNothing();
 
     // Save ticket to database
     await tx.insert(tickets).values({
@@ -153,7 +153,9 @@ export class Lottery {
       })
       .where(eq(rounds.roundId, Number(roundId)));
 
-    console.log(`  Ticket ${ticketId} saved to database and prize pool updated`);
+    console.log(
+      `  Ticket ${ticketId} saved to database and prize pool updated`
+    );
 
     return {
       eventName: "TicketPurchased",
@@ -184,7 +186,7 @@ export class Lottery {
         prizePool: sql`${rounds.prizePool} + ${Number(amount)}`,
       })
       .where(eq(rounds.roundId, Number(roundId)));
-    
+
     console.log(`  Round ${roundId} prize pool increased by ${amount}`);
 
     return {
@@ -207,7 +209,7 @@ export class Lottery {
       newPrice: newPrice.toString(),
       newPrizes: newPrizes.map((p) => p.toString()),
     });
-    
+
     // Note: These configuration changes are only logged, not stored in DB
     // The new values will be used when the next RoundCreated event is emitted
 
@@ -244,7 +246,7 @@ export class Lottery {
     if (winners.length > 0) {
       await tx
         .insert(users)
-        .values(winners.map(winner => ({ address: winner.toLowerCase() })))
+        .values(winners.map((winner) => ({ address: winner.toLowerCase() })))
         .onConflictDoNothing();
 
       // Batch insert all winners
@@ -258,7 +260,9 @@ export class Lottery {
       );
     }
 
-    console.log(`  Round ${roundId} marked as revealed with ${winners.length} winners saved`);
+    console.log(
+      `  Round ${roundId} marked as revealed with ${winners.length} winners saved`
+    );
 
     return {
       eventName: "RoundRevealed",
@@ -284,20 +288,20 @@ export class Lottery {
     });
 
     // Ensure user exists (insert if not exists)
-    await tx
-      .insert(users)
-      .values({ address: account })
-      .onConflictDoNothing();
+    await tx.insert(users).values({ address: account }).onConflictDoNothing();
 
     const roleName = ROLE_MAPPING[role] || "UNKNOWN";
 
     // Save role assignment to database
-    await tx.insert(userRoles).values({
-      userAddress: account,
-      role: roleName,
-      eventTxId: payload.txId,
-      eventLogIndex: payload.logIndex,
-    }).onConflictDoNothing(); // Ignore if role already exists for this user
+    await tx
+      .insert(userRoles)
+      .values({
+        userAddress: account,
+        role: roleName,
+        eventTxId: payload.txId,
+        eventLogIndex: payload.logIndex,
+      })
+      .onConflictDoNothing(); // Ignore if role already exists for this user
 
     console.log(`  Role ${roleName} granted to ${account}`);
 
@@ -329,10 +333,7 @@ export class Lottery {
     await tx
       .delete(userRoles)
       .where(
-        and(
-          eq(userRoles.userAddress, account),
-          eq(userRoles.role, roleName)
-        )
+        and(eq(userRoles.userAddress, account), eq(userRoles.role, roleName))
       );
 
     console.log(`  Role ${roleName} revoked from ${account}`);

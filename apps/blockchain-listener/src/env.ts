@@ -11,4 +11,4 @@ export type Env = z.infer<typeof envSchema>;
 
 export const env = loadEnv(envSchema, {
   sources: [dotEnvSource(".env"), envVarsSource()],
-});
+}) as Env;
