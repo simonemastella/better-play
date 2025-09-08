@@ -1,0 +1,19 @@
+{
+  "name": "@better-play/core",
+  "version": "0.0.1",
+  "description": "Core business logic and services for Better Play",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@better-play/contracts": "workspace:*",
+    "@better-play/database": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "private": true
+}
