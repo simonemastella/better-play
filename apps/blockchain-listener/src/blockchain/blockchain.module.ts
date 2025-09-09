@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventService, LotteryService, UserService } from '@better-play/core';
 import { CoreModule } from '../core/core.module.js';
-import { EventPollingService } from './services/event-polling.service.js';
+import { EventCoordinatorService } from './services/event-coordinator.service.js';
 import { EventProcessorService } from './services/event-processor.service.js';
 import { VeChainEventPollerService } from './services/vechain-event-poller.service.js';
 import { LotteryHandler } from './handlers/lottery.handler.js';
@@ -26,9 +26,9 @@ import type { Database } from '@better-play/database';
       inject: [ConfigService, EventService, EventEmitter2, LotteryHandler, XAllocationVotingHandler, 'DATABASE'],
     },
     {
-      provide: EventPollingService,
+      provide: EventCoordinatorService,
       useFactory: (configService: ConfigService, eventProcessor: EventProcessorService, veChainPoller: VeChainEventPollerService, eventService: EventService) =>
-        new EventPollingService(configService, eventProcessor, veChainPoller, eventService),
+        new EventCoordinatorService(configService, eventProcessor, veChainPoller, eventService),
       inject: [ConfigService, EventProcessorService, VeChainEventPollerService, EventService],
     },
     
@@ -42,7 +42,7 @@ import type { Database } from '@better-play/database';
     XAllocationVotingHandler,
   ],
   exports: [
-    EventPollingService,
+    EventCoordinatorService,
     EventProcessorService,
   ],
 })

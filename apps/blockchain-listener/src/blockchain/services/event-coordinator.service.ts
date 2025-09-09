@@ -8,8 +8,8 @@ import { EventService } from '@better-play/core';
 import type { EventPayload } from '../types/event.types.js';
 
 @Injectable()
-export class EventPollingService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(EventPollingService.name);
+export class EventCoordinatorService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(EventCoordinatorService.name);
   private eventBus = new Subject<EventPayload>();
   private subscription?: Subscription;
   private isRunning = false;
@@ -45,7 +45,7 @@ export class EventPollingService implements OnModuleInit, OnModuleDestroy {
     }
 
     this.isRunning = true;
-    this.logger.log('🚀 Starting Event Polling Service');
+    this.logger.log('🚀 Starting Event Coordinator Service');
 
     // Initialize the VeChain poller with criteria from event processor
     const criteriaSet = this.eventProcessor.getCriteria();
@@ -82,7 +82,7 @@ export class EventPollingService implements OnModuleInit, OnModuleDestroy {
         error: (error) => this.logger.error('💀 Fatal error in event bus', error),
       });
 
-    this.logger.log('✅ Event Polling Service started successfully');
+    this.logger.log('✅ Event Coordinator Service started successfully');
   }
 
   private async stop(): Promise<void> {
@@ -90,7 +90,7 @@ export class EventPollingService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    this.logger.log('🛑 Stopping Event Polling Service');
+    this.logger.log('🛑 Stopping Event Coordinator Service');
     this.isRunning = false;
 
     // Stop polling
@@ -104,7 +104,7 @@ export class EventPollingService implements OnModuleInit, OnModuleDestroy {
     this.eventBus.complete();
     this.eventBus = new Subject<EventPayload>();
 
-    this.logger.log('✅ Event Polling Service stopped');
+    this.logger.log('✅ Event Coordinator Service stopped');
   }
 
   private async getLastProcessedBlock(): Promise<number> {
