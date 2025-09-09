@@ -1,6 +1,7 @@
 {
   "name": "@better-play/core",
   "version": "0.0.1",
+  "type": "module",
   "description": "Core business logic and services for Better Play",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

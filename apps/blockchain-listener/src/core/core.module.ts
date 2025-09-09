@@ -51,6 +51,7 @@ import type { Configuration } from '../config/configuration.js';
     EventService,
   ],
   exports: [
+    'DATABASE',
     LotteryService,
     UserService, 
     EventService,

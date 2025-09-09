@@ -1,0 +1,1 @@
+ALTER TABLE "rounds" ADD COLUMN "prize_pool" bigint DEFAULT 0 NOT NULL;

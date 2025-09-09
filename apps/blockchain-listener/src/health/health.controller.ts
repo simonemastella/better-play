@@ -6,12 +6,12 @@ export class HealthController {
   constructor(private readonly eventProcessor: EventProcessorService) {}
 
   @Get()
-  getHealth() {
+  getHealth(): any {
     return this.eventProcessor.getHealthStatus();
   }
 
   @Get('inflight')
-  getInFlight() {
+  getInFlight(): { inFlight: number; timestamp: string } {
     return {
       inFlight: this.eventProcessor.getInFlightCount(),
       timestamp: new Date().toISOString(),

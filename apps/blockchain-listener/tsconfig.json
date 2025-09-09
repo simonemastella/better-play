@@ -16,7 +16,9 @@
     "declarationMap": true,
     "sourceMap": true,
     "types": ["node"],
-    "noEmit": false
+    "noEmit": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

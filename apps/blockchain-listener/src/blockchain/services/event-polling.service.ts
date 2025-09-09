@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Subject, concatMap, retry, catchError, EMPTY, type Subscription } from 'rxjs';
-import { EventCriteria } from '@vechain/sdk-network';
 import type { Configuration } from '../../config/configuration.js';
 import { EventProcessorService } from './event-processor.service.js';
 import { VeChainEventPollerService } from './vechain-event-poller.service.js';
@@ -47,6 +46,13 @@ export class EventPollingService implements OnModuleInit, OnModuleDestroy {
 
     this.isRunning = true;
     this.logger.log('🚀 Starting Event Polling Service');
+
+    // Initialize the VeChain poller with criteria from event processor
+    const criteriaSet = this.eventProcessor.getCriteria();
+    this.veChainPoller.setCriteriaSet(criteriaSet);
+    
+    // Set the event processor for backpressure monitoring
+    this.veChainPoller.setEventProcessor(this.eventProcessor);
 
     // Get last processed position
     const startingBlock = await this.getLastProcessedBlock();

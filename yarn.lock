@@ -425,12 +425,14 @@ __metadata:
     "@vechain/vebetterdao-contracts": "npm:^5"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.0"
+    dotenv: "npm:^17.2.2"
     ethers: "npm:^6.15.0"
     reflect-metadata: "npm:^0.2.0"
     rxjs: "npm:^7.8.2"
     tsx: "npm:^4.7.0"
     typescript: "npm:^5.3.3"
     vitest: "npm:^1.2.1"
+    zod: "npm:^3.22.0"
   languageName: unknown
   linkType: soft
 
@@ -462,6 +464,7 @@ __metadata:
     ts-node: "npm:^10.9.2"
     typechain: "npm:^8.3.0"
     typescript: "npm:^5.8.3"
+    zod: "npm:^3.22.0"
   languageName: unknown
   linkType: soft
 
@@ -9551,6 +9554,13 @@ __metadata:
   version: 16.6.1
   resolution: "dotenv@npm:16.6.1"
   checksum: 10c0/15ce56608326ea0d1d9414a5c8ee6dcf0fffc79d2c16422b4ac2268e7e2d76ff5a572d37ffe747c377de12005f14b3cc22361e79fc7f1061cce81f77d2c973dc
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^17.2.2":
+  version: 17.2.2
+  resolution: "dotenv@npm:17.2.2"
+  checksum: 10c0/be66513504590aff6eccb14167625aed9bd42ce80547f4fe5d195860211971a7060949b57108dfaeaf90658f79e40edccd3f233f0a978bff507b5b1565ae162b
   languageName: node
   linkType: hard
 

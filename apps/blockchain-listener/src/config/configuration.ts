@@ -1,18 +1,20 @@
-import { loadEnv, dotEnvSource, envVarsSource } from '@better-play/shared';
-import { z } from 'zod';
+import { loadEnv, dotEnvSource, envVarsSource, z } from "@better-play/shared";
 
 const envSchema = z.object({
   // Blockchain Configuration
-  NETWORK: z.enum(['mainnet', 'testnet']).default('testnet'),
+  NETWORK: z.enum(["mainnet", "testnet"]),
   LOTTERY_CONTRACT_ADDRESS: z.string(),
-  STARTING_BLOCK: z.coerce.number().default(0),
-  POLLING_INTERVAL: z.coerce.number().default(5000),
-  
+  STARTING_BLOCK: z.coerce.number(),
+  POLLING_INTERVAL: z.coerce.number(),
+
   // Database Configuration
   DATABASE_URL: z.string(),
 });
+export type BlEnv = z.infer<typeof envSchema>;
 
-const env = loadEnv(envSchema, dotEnvSource('.env'), envVarsSource());
+const env = loadEnv<BlEnv>(envSchema, {
+  sources: [dotEnvSource(".env"), envVarsSource()],
+});
 
 export const configuration = () => ({
   blockchain: {

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EnvSource, envVarsSource } from './env-sources';
+import { EnvSource, envVarsSource } from './env-sources.js';
 
 export interface LoadEnvOptions {
   sources?: EnvSource[];

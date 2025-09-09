@@ -1,4 +1,8 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventService, LotteryService, UserService } from '@better-play/core';
+import { CoreModule } from '../core/core.module.js';
 import { EventPollingService } from './services/event-polling.service.js';
 import { EventProcessorService } from './services/event-processor.service.js';
 import { VeChainEventPollerService } from './services/vechain-event-poller.service.js';
@@ -7,19 +11,34 @@ import { XAllocationVotingHandler } from './handlers/xallocation-voting.handler.
 import type { Database } from '@better-play/database';
 
 @Module({
+  imports: [CoreModule],
   providers: [
-    // Services
-    EventPollingService,
+    // Services (order matters for dependency injection)
+    {
+      provide: VeChainEventPollerService,
+      useFactory: (configService: ConfigService) => new VeChainEventPollerService(configService),
+      inject: [ConfigService],
+    },
     {
       provide: EventProcessorService,
-      useFactory: (configService, eventService, eventEmitter, lotteryHandler, xAllocationHandler, database: Database) =>
+      useFactory: (configService: ConfigService, eventService: EventService, eventEmitter: EventEmitter2, lotteryHandler: LotteryHandler, xAllocationHandler: XAllocationVotingHandler, database: Database) =>
         new EventProcessorService(configService, eventService, eventEmitter, lotteryHandler, xAllocationHandler, database),
-      inject: ['ConfigService', 'EventService', 'EventEmitter2', 'LotteryHandler', 'XAllocationVotingHandler', 'DATABASE'],
+      inject: [ConfigService, EventService, EventEmitter2, LotteryHandler, XAllocationVotingHandler, 'DATABASE'],
     },
-    VeChainEventPollerService,
+    {
+      provide: EventPollingService,
+      useFactory: (configService: ConfigService, eventProcessor: EventProcessorService, veChainPoller: VeChainEventPollerService, eventService: EventService) =>
+        new EventPollingService(configService, eventProcessor, veChainPoller, eventService),
+      inject: [ConfigService, EventProcessorService, VeChainEventPollerService, EventService],
+    },
     
     // Event Handlers
-    LotteryHandler,
+    {
+      provide: LotteryHandler,
+      useFactory: (lotteryService: LotteryService, userService: UserService) =>
+        new LotteryHandler(lotteryService, userService),
+      inject: [LotteryService, UserService],
+    },
     XAllocationVotingHandler,
   ],
   exports: [
@@ -27,18 +46,4 @@ import type { Database } from '@better-play/database';
     EventProcessorService,
   ],
 })
-export class BlockchainModule implements OnModuleInit {
-  constructor(
-    private eventProcessor: EventProcessorService,
-    private veChainPoller: VeChainEventPollerService
-  ) {}
-
-  onModuleInit() {
-    // Initialize the VeChain poller with criteria from event processor
-    const criteriaSet = this.eventProcessor.getCriteria();
-    this.veChainPoller.setCriteriaSet(criteriaSet);
-    
-    // Set the event processor for backpressure monitoring
-    this.veChainPoller.setEventProcessor(this.eventProcessor);
-  }
-}
+export class BlockchainModule {}
