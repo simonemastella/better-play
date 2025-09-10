@@ -1,6 +1,6 @@
 import { eq, and } from 'drizzle-orm';
 import { users, userRoles, type UserRoleType, type Database } from '@better-play/database';
-import type { IUserRepository } from '../interfaces/repositories.js';
+import type { IUserRepository, IEventRepository, EventData } from '../interfaces/repositories.js';
 import type { RoleGrantedData, RoleRevokedData } from '../types/lottery.types.js';
 
 type TransactionClient = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -18,7 +18,10 @@ const ROLE_MAPPING: Record<string, UserRoleType> = {
 };
 
 export class UserRepository implements IUserRepository {
-  constructor(private database: Database) {}
+  constructor(
+    private database: Database,
+    private eventRepository: IEventRepository
+  ) {}
 
   async ensureExists(address: string, tx?: TransactionClient): Promise<void> {
     const db = tx || this.database;
@@ -28,33 +31,61 @@ export class UserRepository implements IUserRepository {
       .onConflictDoNothing();
   }
 
-  async grantRole(data: RoleGrantedData, tx?: TransactionClient): Promise<void> {
-    const db = tx || this.database;
-    const roleName = ROLE_MAPPING[data.role] || "UNKNOWN";
+  async grantRole(data: RoleGrantedData, eventData: EventData, tx?: TransactionClient): Promise<void> {
+    const execute = async (txClient: TransactionClient) => {
+      const roleName = ROLE_MAPPING[data.role] || "UNKNOWN";
 
-    await db
-      .insert(userRoles)
-      .values({
-        userAddress: data.account,
-        role: roleName,
-        eventTxId: data.txId,
-        eventLogIndex: data.logIndex,
-      })
-      .onConflictDoNothing();
+      await txClient
+        .insert(userRoles)
+        .values({
+          userAddress: data.account,
+          role: roleName,
+          eventTxId: data.txId,
+          eventLogIndex: data.logIndex,
+        })
+        .onConflictDoNothing();
+
+      await this.eventRepository.save(
+        {
+          txId: eventData.txId,
+          logIndex: eventData.logIndex,
+          eventName: "RoleGranted",
+          blockNumber: eventData.blockNumber,
+          decoded: eventData.decoded,
+        },
+        txClient
+      );
+    };
+
+    tx ? await execute(tx) : await this.database.transaction(execute);
   }
 
-  async revokeRole(data: RoleRevokedData, tx?: TransactionClient): Promise<void> {
-    const db = tx || this.database;
-    const roleName = ROLE_MAPPING[data.role] || "UNKNOWN";
+  async revokeRole(data: RoleRevokedData, eventData: EventData, tx?: TransactionClient): Promise<void> {
+    const execute = async (txClient: TransactionClient) => {
+      const roleName = ROLE_MAPPING[data.role] || "UNKNOWN";
 
-    await db
-      .delete(userRoles)
-      .where(
-        and(
-          eq(userRoles.userAddress, data.account),
-          eq(userRoles.role, roleName)
-        )
+      await txClient
+        .delete(userRoles)
+        .where(
+          and(
+            eq(userRoles.userAddress, data.account),
+            eq(userRoles.role, roleName)
+          )
+        );
+
+      await this.eventRepository.save(
+        {
+          txId: eventData.txId,
+          logIndex: eventData.logIndex,
+          eventName: "RoleRevoked",
+          blockNumber: eventData.blockNumber,
+          decoded: eventData.decoded,
+        },
+        txClient
       );
+    };
+
+    tx ? await execute(tx) : await this.database.transaction(execute);
   }
 
   async getUserByAddress(address: string): Promise<any | null> {

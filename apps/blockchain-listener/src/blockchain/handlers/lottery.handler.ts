@@ -47,19 +47,19 @@ export class LotteryHandler {
 
     switch (parsed.name as LotteryEventName) {
       case 'RoundCreated':
-        return this.handleRoundCreated(parsed as any);
+        return this.handleRoundCreated(parsed as any, payload);
       case 'TicketPurchased':
         return this.handleTicketPurchased(parsed as any, payload);
       case 'AmountIncreased':
-        return this.handleAmountIncreased(parsed as any);
+        return this.handleAmountIncreased(parsed as any, payload);
       case 'NextRoundDetailsUpdated':
         return this.handleNextRoundDetailsUpdated(parsed as any);
       case 'RoundRevealed':
-        return this.handleRoundRevealed(parsed as any);
+        return this.handleRoundRevealed(parsed as any, payload);
       case 'RoleGranted':
         return this.handleRoleGranted(parsed as any, payload);
       case 'RoleRevoked':
-        return this.handleRoleRevoked(parsed as any);
+        return this.handleRoleRevoked(parsed as any, payload);
       default:
         this.logger.log(`❓ Unhandled Lottery event: ${parsed.name}`);
         return null;
@@ -67,7 +67,8 @@ export class LotteryHandler {
   }
 
   private async handleRoundCreated(
-    parsed: RoundCreatedEvent.Log
+    parsed: RoundCreatedEvent.Log,
+    payload: EventPayload
   ): Promise<ProcessedEvent> {
     const { roundId, ticketPrice, prizes, endBlock } = parsed.args;
     
@@ -85,17 +86,24 @@ export class LotteryHandler {
       endBlock: Number(endBlock),
     };
 
-    await this.lotteryService.createRound(roundData);
+    const eventData = {
+      roundId: roundId.toString(),
+      ticketPrice: ticketPrice.toString(),
+      prizes: prizes.map((p) => p.toString()),
+      endBlock: endBlock.toString(),
+    };
+
+    await this.lotteryService.createRound(roundData, {
+      txId: payload.txId,
+      logIndex: payload.logIndex,
+      blockNumber: payload.blockNumber,
+      decoded: eventData,
+    });
     this.logger.log(`✅ Round ${roundId} saved to database`);
 
     return {
       eventName: 'RoundCreated',
-      decoded: {
-        roundId: roundId.toString(),
-        ticketPrice: ticketPrice.toString(),
-        prizes: prizes.map((p) => p.toString()),
-        endBlock: endBlock.toString(),
-      },
+      decoded: eventData,
     };
   }
 
@@ -121,22 +129,30 @@ export class LotteryHandler {
       logIndex: payload.logIndex,
     };
 
-    await this.lotteryService.processTicketPurchase(ticketData);
+    const eventData = {
+      ticketId: ticketId.toString(),
+      buyer,
+      roundId: roundId.toString(),
+      price: price.toString(),
+    };
+
+    await this.lotteryService.processTicketPurchase(ticketData, {
+      txId: payload.txId,
+      logIndex: payload.logIndex,
+      blockNumber: payload.blockNumber,
+      decoded: eventData,
+    });
     this.logger.log(`✅ Ticket ${ticketId} saved and prize pool updated`);
 
     return {
       eventName: 'TicketPurchased',
-      decoded: {
-        ticketId: ticketId.toString(),
-        buyer,
-        roundId: roundId.toString(),
-        price: price.toString(),
-      },
+      decoded: eventData,
     };
   }
 
   private async handleAmountIncreased(
-    parsed: AmountIncreasedEvent.Log
+    parsed: AmountIncreasedEvent.Log,
+    payload: EventPayload
   ): Promise<ProcessedEvent> {
     const { roundId, amount } = parsed.args;
     
@@ -150,15 +166,22 @@ export class LotteryHandler {
       amount: Number(amount),
     };
 
-    await this.lotteryService.processAmountIncrease(amountData);
+    const eventData = {
+      roundId: roundId.toString(),
+      amount: amount.toString(),
+    };
+
+    await this.lotteryService.processAmountIncrease(amountData, {
+      txId: payload.txId,
+      logIndex: payload.logIndex,
+      blockNumber: payload.blockNumber,
+      decoded: eventData,
+    });
     this.logger.log(`✅ Round ${roundId} prize pool increased by ${amount}`);
 
     return {
       eventName: 'AmountIncreased',
-      decoded: {
-        roundId: roundId.toString(),
-        amount: amount.toString(),
-      },
+      decoded: eventData,
     };
   }
 
@@ -185,7 +208,8 @@ export class LotteryHandler {
   }
 
   private async handleRoundRevealed(
-    parsed: RoundRevealedEvent.Log
+    parsed: RoundRevealedEvent.Log,
+    payload: EventPayload
   ): Promise<ProcessedEvent> {
     const { roundId, winners, prizes, totalPrize } = parsed.args;
     
@@ -203,17 +227,24 @@ export class LotteryHandler {
       totalPrize: Number(totalPrize),
     };
 
-    await this.lotteryService.processRoundReveal(revealData);
+    const eventData = {
+      roundId: roundId.toString(),
+      winners,
+      prizes: prizes.map((p) => p.toString()),
+      totalPrize: totalPrize.toString(),
+    };
+
+    await this.lotteryService.processRoundReveal(revealData, {
+      txId: payload.txId,
+      logIndex: payload.logIndex,
+      blockNumber: payload.blockNumber,
+      decoded: eventData,
+    });
     this.logger.log(`✅ Round ${roundId} marked as revealed with ${winners.length} winners`);
 
     return {
       eventName: 'RoundRevealed',
-      decoded: {
-        roundId: roundId.toString(),
-        winners,
-        prizes: prizes.map((p) => p.toString()),
-        totalPrize: totalPrize.toString(),
-      },
+      decoded: eventData,
     };
   }
 
@@ -233,17 +264,25 @@ export class LotteryHandler {
       logIndex: payload.logIndex,
     };
 
-    await this.userService.grantRole(roleData);
+    const eventData = { role, account, sender };
+
+    await this.userService.grantRole(roleData, {
+      txId: payload.txId,
+      logIndex: payload.logIndex,
+      blockNumber: payload.blockNumber,
+      decoded: eventData,
+    });
     this.logger.log(`✅ Role granted to ${account}`);
 
     return {
       eventName: 'RoleGranted',
-      decoded: { role, account, sender },
+      decoded: eventData,
     };
   }
 
   private async handleRoleRevoked(
-    parsed: RoleRevokedEvent.Log
+    parsed: RoleRevokedEvent.Log,
+    payload: EventPayload
   ): Promise<ProcessedEvent> {
     const { role, account, sender } = parsed.args;
     
@@ -255,12 +294,19 @@ export class LotteryHandler {
       sender,
     };
 
-    await this.userService.revokeRole(roleData);
+    const eventData = { role, account, sender };
+
+    await this.userService.revokeRole(roleData, {
+      txId: payload.txId,
+      logIndex: payload.logIndex,
+      blockNumber: payload.blockNumber,
+      decoded: eventData,
+    });
     this.logger.log(`✅ Role revoked from ${account}`);
 
     return {
       eventName: 'RoleRevoked',
-      decoded: { role, account, sender },
+      decoded: eventData,
     };
   }
 }

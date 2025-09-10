@@ -109,6 +109,13 @@ export class EventCoordinatorService implements OnModuleInit, OnModuleDestroy {
 
   private async getLastProcessedBlock(): Promise<number> {
     try {
+      // Safety check for EventService
+      if (!this.eventService) {
+        this.logger.warn('⚠️ EventService not available, starting from configured block');
+        const startingBlock = this.configService.get('blockchain.startingBlock', { infer: true }) || 0;
+        return startingBlock;
+      }
+
       const lastEvent = await this.eventService.getLastProcessedEvent();
       
       if (lastEvent) {

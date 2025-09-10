@@ -3,19 +3,26 @@ import type { Database } from '@better-play/database';
 
 type TransactionClient = Parameters<Parameters<Database['transaction']>[0]>[0];
 
+export interface EventData {
+  txId: string;
+  logIndex: number;
+  blockNumber: number;
+  decoded: Record<string, any>;
+}
+
 export interface ILotteryRepository {
-  createRound(data: CreateRoundData, tx?: TransactionClient): Promise<void>;
-  addTicket(data: CreateTicketData, tx?: TransactionClient): Promise<void>;
-  increasePrizePool(roundId: number, amount: number, tx?: TransactionClient): Promise<void>;
-  revealRound(data: RoundRevealData): Promise<void>;
+  createRound(data: CreateRoundData, eventData: EventData, tx?: TransactionClient): Promise<void>;
+  addTicket(data: CreateTicketData, eventData: EventData, tx?: TransactionClient): Promise<void>;
+  increasePrizePool(roundId: number, amount: number, eventData: EventData, tx?: TransactionClient): Promise<void>;
+  revealRound(data: RoundRevealData, eventData: EventData): Promise<void>;
   getActiveRounds(): Promise<any[]>;
   getRoundById(roundId: number): Promise<any | null>;
 }
 
 export interface IUserRepository {
   ensureExists(address: string, tx?: TransactionClient): Promise<void>;
-  grantRole(data: RoleGrantedData, tx?: TransactionClient): Promise<void>;
-  revokeRole(data: RoleRevokedData, tx?: TransactionClient): Promise<void>;
+  grantRole(data: RoleGrantedData, eventData: EventData, tx?: TransactionClient): Promise<void>;
+  revokeRole(data: RoleRevokedData, eventData: EventData, tx?: TransactionClient): Promise<void>;
   getUserByAddress(address: string): Promise<any | null>;
 }
 

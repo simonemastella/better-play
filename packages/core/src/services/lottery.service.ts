@@ -1,4 +1,6 @@
-import type { ILotteryRepository, IUserRepository } from '../interfaces/repositories.js';
+import { eq, sql } from 'drizzle-orm';
+import { rounds } from '@better-play/database';
+import type { ILotteryRepository, IUserRepository, EventData } from '../interfaces/repositories.js';
 import type { 
   TicketPurchaseData, 
   CreateRoundData, 
@@ -16,41 +18,46 @@ export class LotteryService {
     private database: Database
   ) {}
 
-  async createRound(data: CreateRoundData): Promise<void> {
-    await this.lotteryRepository.createRound(data);
+  async createRound(data: CreateRoundData, eventData: EventData): Promise<void> {
+    await this.lotteryRepository.createRound(data, eventData);
   }
 
-  async processTicketPurchase(data: TicketPurchaseData): Promise<void> {
+  async processTicketPurchase(data: TicketPurchaseData, eventData: EventData): Promise<void> {
     await this.database.transaction(async (tx) => {
       // Ensure user exists first
       await this.userRepository.ensureExists(data.buyer, tx);
       
-      // Add the ticket
+      // Add the ticket (this will save the TicketPurchased event)
       await this.lotteryRepository.addTicket({
         ticketId: data.ticketId,
         roundId: data.roundId,
         buyer: data.buyer,
         eventTxId: data.txId,
         eventLogIndex: data.logIndex,
-      }, tx);
+      }, eventData, tx);
       
-      // Update prize pool
-      await this.lotteryRepository.increasePrizePool(data.roundId, data.price, tx);
+      // Update prize pool without saving event (since it's part of the ticket purchase)
+      await tx
+        .update(rounds)
+        .set({
+          prizePool: sql`${rounds.prizePool} + ${data.price}`,
+        })
+        .where(eq(rounds.roundId, data.roundId));
     });
   }
 
-  async processAmountIncrease(data: AmountIncreasedData): Promise<void> {
-    await this.lotteryRepository.increasePrizePool(data.roundId, data.amount);
+  async processAmountIncrease(data: AmountIncreasedData, eventData: EventData): Promise<void> {
+    await this.lotteryRepository.increasePrizePool(data.roundId, data.amount, eventData);
   }
 
-  async processRoundReveal(data: RoundRevealData): Promise<void> {
+  async processRoundReveal(data: RoundRevealData, eventData: EventData): Promise<void> {
     // Ensure all winners exist as users
     for (const winner of data.winners) {
       await this.userRepository.ensureExists(winner);
     }
     
     // Mark round as revealed and save winners
-    await this.lotteryRepository.revealRound(data);
+    await this.lotteryRepository.revealRound(data, eventData);
   }
 
   // Query methods for API

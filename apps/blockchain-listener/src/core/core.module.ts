@@ -26,13 +26,15 @@ import type { Configuration } from '../config/configuration.js';
     // Repositories
     {
       provide: LotteryRepository,
-      useFactory: (database: Database) => new LotteryRepository(database),
-      inject: ['DATABASE'],
+      useFactory: (database: Database, eventRepository: EventRepository) => 
+        new LotteryRepository(database, eventRepository),
+      inject: ['DATABASE', EventRepository],
     },
     {
       provide: UserRepository,
-      useFactory: (database: Database) => new UserRepository(database),
-      inject: ['DATABASE'],
+      useFactory: (database: Database, eventRepository: EventRepository) => 
+        new UserRepository(database, eventRepository),
+      inject: ['DATABASE', EventRepository],
     },
     {
       provide: EventRepository,
@@ -47,8 +49,16 @@ import type { Configuration } from '../config/configuration.js';
         new LotteryService(lotteryRepo, userRepo, database),
       inject: [LotteryRepository, UserRepository, 'DATABASE'],
     },
-    UserService,
-    EventService,
+    {
+      provide: EventService,
+      useFactory: (eventRepo: EventRepository) => new EventService(eventRepo),
+      inject: [EventRepository],
+    },
+    {
+      provide: UserService,
+      useFactory: (userRepo: UserRepository) => new UserService(userRepo),
+      inject: [UserRepository],
+    },
   ],
   exports: [
     'DATABASE',

@@ -1,9 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventService } from '@better-play/core';
 import type { EventPayload, ProcessedEvent } from '../types/event.types.js';
 
 @Injectable()
 export class XAllocationVotingHandler {
   private readonly logger = new Logger(XAllocationVotingHandler.name);
+
+  constructor(private eventService: EventService) {}
 
   async processEvent(
     parsed: any,
@@ -14,7 +17,7 @@ export class XAllocationVotingHandler {
 
     // For now, just log and return the processed event
     // In the future, you can add specific handlers for different XAllocationVoting events
-    return {
+    const processedEvent = {
       eventName: parsed.name,
       decoded: Object.fromEntries(
         parsed.args.map((arg: unknown, index: number) => [
@@ -23,5 +26,15 @@ export class XAllocationVotingHandler {
         ])
       ),
     };
+
+    // Save the event to the database
+    await this.eventService.saveProcessedEvent(processedEvent, {
+      txId: payload.txId,
+      logIndex: payload.logIndex,
+      blockNumber: payload.blockNumber,
+    });
+    this.logger.log(`✅ XAllocationVoting event ${parsed.name} saved to database`);
+
+    return processedEvent;
   }
 }

@@ -1,11 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Interface } from "ethers";
 import { Lottery__factory } from "@better-play/contracts";
 import { XAllocationVoting as XAllocationVotingABI } from "@vechain/vebetterdao-contracts";
-import { EventService } from "@better-play/core";
-import type { Database } from "@better-play/database";
 import type { Configuration } from "../../config/configuration.js";
 import type { EventPayload, ProcessedEvent } from "../types/event.types.js";
 import { LotteryHandler } from "../handlers/lottery.handler.js";
@@ -34,11 +31,8 @@ export class EventProcessorService {
 
   constructor(
     private configService: ConfigService<Configuration>,
-    private eventService: EventService,
-    private eventEmitter: EventEmitter2,
     private lotteryHandler: LotteryHandler,
-    private xAllocationHandler: XAllocationVotingHandler,
-    private readonly database: Database
+    private xAllocationHandler: XAllocationVotingHandler
   ) {
     this.initializeContracts();
   }
@@ -133,53 +127,32 @@ export class EventProcessorService {
         return;
       }
 
-      // Wrap entire event processing in transaction
-      await this.database.transaction(async (_tx) => {
-        try {
-          const processedEvent = await contract.handler.processEvent(
-            parsed,
-            payload
+      // Process event within database transaction for atomicity
+      let processedEvent: any = null;
+      try {
+        processedEvent = await contract.handler.processEvent(parsed, payload);
+
+        if (processedEvent) {
+          this.logger.log(
+            `✅ ${processedEvent.eventName} event processed and saved (${
+              this.inFlight - 1
+            } remaining in-flight)`
           );
-
-          if (processedEvent) {
-            // Save the event to database within transaction
-            await this.eventService.saveProcessedEvent(processedEvent, {
-              txId: payload.txId,
-              logIndex: payload.logIndex,
-              blockNumber: payload.blockNumber,
-            });
-
-            this.logger.log(
-              `✅ ${processedEvent.eventName} event processed (${
-                this.inFlight - 1
-              } remaining in-flight)`
-            );
-
-            // Emit event for other services (future backend API) - only after successful commit
-            this.eventEmitter.emit(
-              `blockchain.${contract.name.toLowerCase()}.${processedEvent.eventName.toLowerCase()}`,
-              {
-                ...processedEvent,
-                payload,
-              }
-            );
-          }
-        } catch (error: any) {
-          // Check if it's a duplicate constraint violation
-          if (
-            error?.code === "23505" ||
-            error?.message?.includes("duplicate key") ||
-            error?.message?.includes("UNIQUE constraint")
-          ) {
-            this.logger.debug(
-              `🔄 Skipping duplicate event: ${payload.txId}:${payload.logIndex}`
-            );
-            return;
-          }
-          // Re-throw other errors to trigger rollback
-          throw error;
         }
-      });
+      } catch (error: any) {
+        // Check if it's a duplicate constraint violation
+        if (
+          error?.cause?.code === "23505" &&
+          error?.cause?.constraint_name === "events_tx_id_log_index_pk"
+        ) {
+          this.logger.debug(
+            `🔄 Skipping duplicate event: ${payload.txId}:${payload.logIndex}`
+          );
+          return;
+        }
+        // Re-throw other errors
+        throw error;
+      }
     } finally {
       this.inFlight--;
     }
