@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { 
   LotteryService, 
   UserService,
@@ -35,7 +36,8 @@ export class LotteryHandler {
 
   constructor(
     private lotteryService: LotteryService,
-    private userService: UserService
+    private userService: UserService,
+    private eventEmitter: EventEmitter2
   ) {}
 
   async processEvent(
@@ -101,6 +103,15 @@ export class LotteryHandler {
     });
     this.logger.log(`✅ Round ${roundId} saved to database`);
 
+    // 🚀 Emit event for real-time frontend updates
+    this.eventEmitter.emit('lottery.round.created', {
+      roundId: roundId.toString(),
+      ticketPrice: ticketPrice.toString(),
+      prizes: prizes.map((p) => p.toString()),
+      endBlock: endBlock.toString(),
+      blockNumber: payload.blockNumber,
+    });
+
     return {
       eventName: 'RoundCreated',
       decoded: eventData,
@@ -143,6 +154,15 @@ export class LotteryHandler {
       decoded: eventData,
     });
     this.logger.log(`✅ Ticket ${ticketId} saved and prize pool updated`);
+
+    // 🎫 Emit event for real-time frontend updates  
+    this.eventEmitter.emit('lottery.ticket.purchased', {
+      ticketId: ticketId.toString(),
+      buyer,
+      roundId: roundId.toString(),
+      price: price.toString(),
+      blockNumber: payload.blockNumber,
+    });
 
     return {
       eventName: 'TicketPurchased',
@@ -241,6 +261,15 @@ export class LotteryHandler {
       decoded: eventData,
     });
     this.logger.log(`✅ Round ${roundId} marked as revealed with ${winners.length} winners`);
+
+    // 🏆 Emit event for real-time frontend updates
+    this.eventEmitter.emit('lottery.round.revealed', {
+      roundId: roundId.toString(),
+      winners: [...winners],
+      prizes: prizes.map((p) => p.toString()),
+      totalPrize: totalPrize.toString(),
+      blockNumber: payload.blockNumber,
+    });
 
     return {
       eventName: 'RoundRevealed',

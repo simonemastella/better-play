@@ -198,59 +198,124 @@ function LotteryPage() {
               </button>
             </div>
 
-            {/* My Current Tickets */}
+            {/* My Tickets - All Rounds */}
             {wallet.connection.isConnected && (
               <div className="bg-purple-900/20 backdrop-blur rounded-3xl p-8 border border-purple-500/30">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-purple-200">My Current Tickets</h3>
-                  <div className="text-purple-300 text-sm">Round #47</div>
+                  <h3 className="text-2xl font-bold text-purple-200">
+                    My Tickets - {selectedRound === "latest" ? "Round #47 (Current)" : `Round #${selectedRound}`}
+                  </h3>
+                  <select 
+                    value={selectedRound}
+                    onChange={(e) => setSelectedRound(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:border-purple-500 focus:outline-none"
+                  >
+                    <option value="latest">Round #47 (Current)</option>
+                    <option value="46">Round #46</option>
+                    <option value="45">Round #45</option>
+                  </select>
                 </div>
                 
                 {/* Summary Stats */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-purple-900/40 backdrop-blur-sm rounded-xl p-3 text-center border border-purple-500/30">
-                    <div className="text-xl font-bold text-purple-300">25</div>
-                    <div className="text-purple-200 text-xs">Active Tickets</div>
+                    <div className="text-xl font-bold text-purple-300">
+                      {selectedRound === "latest" ? "25" : selectedRound === "46" ? "18" : "22"}
+                    </div>
+                    <div className="text-purple-200 text-xs">
+                      {selectedRound === "latest" ? "Active" : "Past"} Tickets
+                    </div>
                   </div>
                   <div className="bg-green-900/40 backdrop-blur-sm rounded-xl p-3 text-center border border-green-500/30">
-                    <div className="text-xl font-bold text-green-300">250 B3TR</div>
+                    <div className="text-xl font-bold text-green-300">
+                      {selectedRound === "latest" ? "250" : selectedRound === "46" ? "180" : "220"} B3TR
+                    </div>
                     <div className="text-green-200 text-xs">Invested</div>
                   </div>
                 </div>
 
+                {/* Round Status */}
+                {selectedRound !== "latest" && (
+                  <div className="bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 mb-6 border border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-white font-bold">Round #{selectedRound} - Completed</div>
+                        <div className="text-gray-400 text-sm">
+                          {selectedRound === "46" ? "2 weeks ago" : "3 weeks ago"}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-red-400 font-bold">No Wins</div>
+                        <div className="text-gray-400 text-sm">Better luck next time!</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Scrollable Ticket List */}
                 <div className="bg-slate-900/40 backdrop-blur-sm rounded-2xl border border-purple-500/30 overflow-hidden">
                   <div className="p-3 border-b border-purple-500/20">
-                    <h4 className="text-sm font-bold text-purple-200">My Tickets</h4>
+                    <h4 className="text-sm font-bold text-purple-200">
+                      My Tickets ({selectedRound === "latest" ? "25" : selectedRound === "46" ? "18" : "22"})
+                    </h4>
                   </div>
                   
                   <div className="max-h-80 overflow-y-auto">
                     <div className="space-y-1 p-3">
-                      {Array.from({ length: 25 }, (_, i) => (
-                        <div key={i} className="flex items-center justify-between bg-slate-800/50 rounded-lg p-2 border border-slate-700/50">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-purple-600 rounded-lg flex items-center justify-center text-white text-xs">
-                              🎫
+                      {(() => {
+                        const getTicketsForRound = () => {
+                          if (selectedRound === "latest") {
+                            return Array.from({ length: 25 }, (_, i) => ({
+                              id: 1000 + i + 1,
+                              time: "2h ago",
+                              status: "Active",
+                              statusColor: "text-green-400"
+                            }));
+                          } else if (selectedRound === "46") {
+                            return Array.from({ length: 18 }, (_, i) => ({
+                              id: 4600 + i + 1,
+                              time: "2 weeks ago",
+                              status: "No Win",
+                              statusColor: "text-red-400"
+                            }));
+                          } else {
+                            return Array.from({ length: 22 }, (_, i) => ({
+                              id: 4500 + i + 1,
+                              time: "3 weeks ago",
+                              status: "No Win",
+                              statusColor: "text-red-400"
+                            }));
+                          }
+                        };
+                        
+                        return getTicketsForRound().map((ticket) => (
+                          <div key={ticket.id} className="flex items-center justify-between bg-slate-800/50 rounded-lg p-2 border border-slate-700/50 hover:bg-slate-700/50 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-purple-600 rounded-lg flex items-center justify-center text-white text-xs">
+                                🎫
+                              </div>
+                              <div>
+                                <div className="text-white font-medium text-xs">#{ticket.id}</div>
+                                <div className="text-gray-400 text-xs">{ticket.time}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="text-white font-medium text-xs">#{1000 + i + 1}</div>
-                              <div className="text-gray-400 text-xs">2h ago</div>
+                            <div className="text-right">
+                              <div className="text-purple-300 font-bold text-xs">10 B3TR</div>
+                              <div className={`text-xs ${ticket.statusColor}`}>{ticket.status}</div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-purple-300 font-bold text-xs">10 B3TR</div>
-                            <div className="text-green-400 text-xs">Active</div>
-                          </div>
-                        </div>
-                      ))}
+                        ));
+                      })()}
                     </div>
                     
-                    {/* Load More Indicator */}
-                    <div className="p-3 text-center border-t border-purple-500/20">
-                      <button className="text-purple-400 hover:text-purple-300 text-xs font-medium">
-                        Load More...
-                      </button>
-                    </div>
+                    {/* Load More Indicator - Only for current round */}
+                    {selectedRound === "latest" && (
+                      <div className="p-3 text-center border-t border-purple-500/20">
+                        <button className="text-purple-400 hover:text-purple-300 text-xs font-medium">
+                          Load More...
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

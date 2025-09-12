@@ -9,6 +9,7 @@ import {
   EventRepository
 } from '@better-play/core';
 import { createDatabase, type Database } from '@better-play/database';
+import { Redis } from 'ioredis';
 import type { Configuration } from '../config/configuration.js';
 
 @Module({
@@ -23,12 +24,27 @@ import type { Configuration } from '../config/configuration.js';
       inject: [ConfigService],
     },
     
+    // Redis connection
+    {
+      provide: 'REDIS',
+      useFactory: (configService: ConfigService<Configuration>): Redis => {
+        const redisConfig = configService.get('redis', { infer: true })!;
+        return new Redis({
+          host: redisConfig.host,
+          port: redisConfig.port,
+          password: redisConfig.password,
+          maxRetriesPerRequest: 3,
+        });
+      },
+      inject: [ConfigService],
+    },
+    
     // Repositories
     {
       provide: LotteryRepository,
-      useFactory: (database: Database, eventRepository: EventRepository) => 
-        new LotteryRepository(database, eventRepository),
-      inject: ['DATABASE', EventRepository],
+      useFactory: (database: Database, eventRepository: EventRepository, redis: Redis) => 
+        new LotteryRepository(database, eventRepository, redis),
+      inject: ['DATABASE', EventRepository, 'REDIS'],
     },
     {
       provide: UserRepository,
@@ -38,8 +54,8 @@ import type { Configuration } from '../config/configuration.js';
     },
     {
       provide: EventRepository,
-      useFactory: (database: Database) => new EventRepository(database),
-      inject: ['DATABASE'],
+      useFactory: (database: Database, redis: Redis) => new EventRepository(database, redis),
+      inject: ['DATABASE', 'REDIS'],
     },
     
     // Services  

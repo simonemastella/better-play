@@ -1,11 +1,14 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count } from "drizzle-orm";
 import { events, type Database } from "@better-play/database";
 import type { IEventRepository } from "../interfaces/repositories.js";
+import { Redis } from "ioredis";
 
 type TransactionClient = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export class EventRepository implements IEventRepository {
-  constructor(private database: Database) {}
+  private readonly TX_COUNT_KEY = "blockchain:tx_count";
+
+  constructor(private database: Database, private redis: Redis) {}
 
   async save(
     event: {
@@ -25,6 +28,10 @@ export class EventRepository implements IEventRepository {
       blockNumber: event.blockNumber,
       decoded: event.decoded,
     });
+
+    // 🚀 Increment transaction count in Redis
+    if (!(await this.redis.get(this.TX_COUNT_KEY)))
+      await this.redis.incr(this.TX_COUNT_KEY);
   }
 
   async exists(txId: string, logIndex: number): Promise<boolean> {
@@ -53,5 +60,25 @@ export class EventRepository implements IEventRepository {
       .limit(1);
 
     return lastEvent.length > 0 ? lastEvent[0] : null;
+  }
+
+  async getTransactionCount(): Promise<number> {
+    // Try Redis cache first
+    const cachedCount = await this.redis.get(this.TX_COUNT_KEY);
+    if (cachedCount) {
+      return parseInt(cachedCount, 10);
+    }
+
+    // Cache miss - query database
+    const result = await this.database
+      .select({ count: count() })
+      .from(events);
+    
+    const dbCount = result[0].count;
+
+    // Cache the result in Redis
+    await this.redis.set(this.TX_COUNT_KEY, dbCount.toString());
+
+    return dbCount;
   }
 }

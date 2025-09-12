@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@better-play/contracts": "workspace:*",
-    "@better-play/database": "workspace:*"
+    "@better-play/database": "workspace:*",
+    "ioredis": "^5.7.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

@@ -68,4 +68,8 @@ export class LotteryService {
   async getRoundDetails(roundId: number): Promise<any | null> {
     return this.lotteryRepository.getRoundById(roundId);
   }
+
+  async getTicketCount(): Promise<number> {
+    return this.lotteryRepository.getTicketCount();
+  }
 }

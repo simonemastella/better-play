@@ -17,6 +17,7 @@ export interface ILotteryRepository {
   revealRound(data: RoundRevealData, eventData: EventData): Promise<void>;
   getActiveRounds(): Promise<any[]>;
   getRoundById(roundId: number): Promise<any | null>;
+  getTicketCount(): Promise<number>;
 }
 
 export interface IUserRepository {

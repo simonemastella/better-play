@@ -15,13 +15,17 @@ import type {
   CreateTicketData,
   RoundRevealData,
 } from "../types/lottery.types.js";
+import { Redis } from "ioredis";
 
 type TransactionClient = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export class LotteryRepository implements ILotteryRepository {
+  private readonly TICKET_COUNT_KEY = "lottery:ticket_count";
+
   constructor(
     private database: Database,
-    private eventRepository: IEventRepository
+    private eventRepository: IEventRepository,
+    private redis: Redis
   ) {}
 
   async createRound(
@@ -79,6 +83,10 @@ export class LotteryRepository implements ILotteryRepository {
     };
 
     tx ? await execute(tx) : await this.database.transaction(execute);
+
+    // 🎫 Increment ticket count in Redis
+    if (!(await this.redis.get(this.TICKET_COUNT_KEY)))
+      await this.redis.incr(this.TICKET_COUNT_KEY);
   }
 
   async increasePrizePool(
@@ -162,5 +170,25 @@ export class LotteryRepository implements ILotteryRepository {
       .limit(1);
 
     return result[0] || null;
+  }
+
+  async getTicketCount(): Promise<number> {
+    // Try Redis cache first
+    const cachedCount = await this.redis.get(this.TICKET_COUNT_KEY);
+    if (cachedCount) {
+      return parseInt(cachedCount, 10);
+    }
+
+    // Fallback to database count
+    const result = await this.database
+      .select({ count: sql<number>`count(*)` })
+      .from(tickets);
+
+    const count = result[0]?.count || 0;
+
+    // Update Redis cache with actual count
+    await this.redis.set(this.TICKET_COUNT_KEY, count);
+
+    return count;
   }
 }

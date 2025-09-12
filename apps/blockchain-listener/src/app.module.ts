@@ -4,6 +4,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BlockchainModule } from './blockchain/blockchain.module.js';
 import { CoreModule } from './core/core.module.js';
 import { HealthModule } from './health/health.module.js';
+import { RedisPublisherService } from './redis-publisher.service.js';
 import { configuration } from './config/configuration.js';
 
 @Module({
@@ -31,5 +32,6 @@ import { configuration } from './config/configuration.js';
     // Health monitoring
     HealthModule,
   ],
+  providers: [RedisPublisherService],
 })
 export class AppModule {}

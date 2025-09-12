@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventService, LotteryService, UserService } from '@better-play/core';
 import { CoreModule } from '../core/core.module.js';
 import { EventCoordinatorService } from './services/event-coordinator.service.js';
@@ -34,9 +35,9 @@ import type { Database } from '@better-play/database';
     // Event Handlers
     {
       provide: LotteryHandler,
-      useFactory: (lotteryService: LotteryService, userService: UserService) =>
-        new LotteryHandler(lotteryService, userService),
-      inject: [LotteryService, UserService],
+      useFactory: (lotteryService: LotteryService, userService: UserService, eventEmitter: EventEmitter2) =>
+        new LotteryHandler(lotteryService, userService, eventEmitter),
+      inject: [LotteryService, UserService, EventEmitter2],
     },
     {
       provide: XAllocationVotingHandler,

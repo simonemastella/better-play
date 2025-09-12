@@ -21,6 +21,23 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: better-play-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - better-play-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
   # blockchain-listener:
   #   build:
   #     context: .
@@ -64,6 +81,8 @@ services:
 
 volumes:
   postgres-data:
+    driver: local
+  redis-data:
     driver: local
 
 networks:

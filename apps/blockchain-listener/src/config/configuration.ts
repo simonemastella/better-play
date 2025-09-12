@@ -9,6 +9,11 @@ const envSchema = z.object({
 
   // Database Configuration
   DATABASE_URL: z.string(),
+
+  // Redis Configuration
+  REDIS_HOST: z.string(),
+  REDIS_PORT: z.coerce.number(),
+  REDIS_PASSWORD: z.string().optional(),
 });
 export type BlEnv = z.infer<typeof envSchema>;
 
@@ -25,6 +30,11 @@ export const configuration = () => ({
   },
   database: {
     url: env.DATABASE_URL,
+  },
+  redis: {
+    host: env.REDIS_HOST,
+    port: env.REDIS_PORT,
+    password: env.REDIS_PASSWORD,
   },
 });
 
