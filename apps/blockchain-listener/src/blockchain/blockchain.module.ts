@@ -41,9 +41,9 @@ import type { Database } from '@better-play/database';
     },
     {
       provide: XAllocationVotingHandler,
-      useFactory: (eventService: EventService) =>
-        new XAllocationVotingHandler(eventService),
-      inject: [EventService],
+      useFactory: (eventService: EventService, eventEmitter: EventEmitter2) =>
+        new XAllocationVotingHandler(eventService, eventEmitter),
+      inject: [EventService, EventEmitter2],
     },
   ],
   exports: [

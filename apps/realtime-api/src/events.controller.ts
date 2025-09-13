@@ -1,19 +1,39 @@
-import { Controller, Sse, MessageEvent } from '@nestjs/common';
-import { Observable, Subject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Controller, Sse, MessageEvent, Logger } from "@nestjs/common";
+import { Observable } from "rxjs";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
-@Controller('events')
+@Controller()
 export class EventsController {
-  private eventsSubject = new Subject<any>();
+  private readonly logger = new Logger(`🟦 ${EventsController.name}`);
 
-  @Sse()
+  constructor(private eventEmitter: EventEmitter2) {}
+
+  @Sse('events')
   sendEvents(): Observable<MessageEvent> {
-    return this.eventsSubject.asObservable().pipe(
-      map((data) => ({ data }))
-    );
+    return new Observable<MessageEvent>((subscriber) => {
+      const handler = (eventName: string, data: any) => {
+        subscriber.next({
+          data: JSON.stringify({
+            event: eventName,
+            data,
+            timestamp: new Date().toISOString()
+          })
+        });
+      };
+      
+      this.eventEmitter.onAny(handler);
+      
+      // Send connection message
+      subscriber.next({
+        data: JSON.stringify({
+          event: 'connected',
+          data: { message: 'SSE connection established' },
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      return () => this.eventEmitter.offAny(handler);
+    });
   }
 
-  broadcastEvent(eventData: any) {
-    this.eventsSubject.next(eventData);
-  }
 }

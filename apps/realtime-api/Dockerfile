@@ -14,14 +14,11 @@ COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
 COPY tsconfig.json ./
 
-# Copy workspace packages that blockchain-listener depends on
-COPY packages/contracts ./packages/contracts
-COPY packages/core ./packages/core
-COPY packages/database ./packages/database
+# Copy workspace packages that realtime-api depends on
 COPY packages/shared ./packages/shared
 
-# Copy blockchain-listener app
-COPY apps/blockchain-listener ./apps/blockchain-listener
+# Copy realtime-api app
+COPY apps/realtime-api ./apps/realtime-api
 
 # Install all dependencies and build
 RUN yarn install
@@ -37,14 +34,14 @@ WORKDIR /app
 # Copy built application and dependencies
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/blockchain-listener/dist ./apps/blockchain-listener/dist
-COPY --from=builder /app/apps/blockchain-listener/package.json ./apps/blockchain-listener/package.json
-COPY --from=builder /app/apps/blockchain-listener/.env.docker ./apps/blockchain-listener/.env
+COPY --from=builder /app/apps/realtime-api/dist ./apps/realtime-api/dist
+COPY --from=builder /app/apps/realtime-api/package.json ./apps/realtime-api/package.json
+COPY --from=builder /app/apps/realtime-api/.env.docker ./apps/realtime-api/.env
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/yarn.lock ./yarn.lock
 
 # Set working directory to the app
-WORKDIR /app/apps/blockchain-listener
+WORKDIR /app/apps/realtime-api
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]

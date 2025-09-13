@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSE Test</title>
+</head>
+<body>
+    <h1>SSE Test</h1>
+    <div id="events"></div>
+    
+    <script>
+        console.log('Creating EventSource...');
+        const eventSource = new EventSource('http://localhost:3001/events');
+        
+        eventSource.onopen = function(event) {
+            console.log('✅ EventSource connected');
+            document.getElementById('events').innerHTML += '<p>✅ Connected</p>';
+        };
+        
+        eventSource.onmessage = function(event) {
+            console.log('📨 Message received:', event.data);
+            document.getElementById('events').innerHTML += '<p>📨 ' + event.data + '</p>';
+        };
+        
+        eventSource.onerror = function(event) {
+            console.error('❌ EventSource error:', event);
+            document.getElementById('events').innerHTML += '<p>❌ Error</p>';
+        };
+    </script>
+</body>
+</html>

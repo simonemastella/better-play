@@ -6,7 +6,7 @@ import {
   Inject,
 } from "@nestjs/common";
 import { Redis } from "ioredis";
-import { EventsController } from "./events.controller.js";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 @Injectable()
 export class RedisSubscriberService implements OnModuleInit, OnModuleDestroy {
@@ -14,12 +14,9 @@ export class RedisSubscriberService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @Inject("REDIS") private redis: Redis,
-    private eventsController: EventsController
+    private eventEmitter: EventEmitter2
   ) {
-    this.logger.log(
-      "RedisSubscriberService constructor called",
-      !!eventsController
-    );
+    this.logger.log("RedisSubscriberService constructor called");
   }
 
   async onModuleInit() {
@@ -31,18 +28,9 @@ export class RedisSubscriberService implements OnModuleInit, OnModuleDestroy {
         const eventData = JSON.parse(message);
         this.logger.log(`Received event from ${channel}:`, eventData);
 
-        // Debug controller availability
-        this.logger.log("EventsController available:", !!this.eventsController);
-
-        // Broadcast to SSE clients
-        if (this.eventsController && this.eventsController.broadcastEvent) {
-          this.eventsController.broadcastEvent(eventData);
-          this.logger.log("Event broadcasted successfully");
-        } else {
-          this.logger.error(
-            "EventsController not available or broadcastEvent method missing"
-          );
-        }
+        // Emit semantic events based on event type
+        const eventType = eventData.type || "blockchain.unknown";
+        this.eventEmitter.emit(eventType, eventData);
       } catch (error) {
         this.logger.error("Error processing Redis message:", error);
       }

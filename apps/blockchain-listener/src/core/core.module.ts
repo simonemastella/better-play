@@ -78,6 +78,7 @@ import type { Configuration } from '../config/configuration.js';
   ],
   exports: [
     'DATABASE',
+    'REDIS',
     LotteryService,
     UserService, 
     EventService,

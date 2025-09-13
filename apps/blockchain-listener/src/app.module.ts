@@ -5,6 +5,7 @@ import { BlockchainModule } from './blockchain/blockchain.module.js';
 import { CoreModule } from './core/core.module.js';
 import { HealthModule } from './health/health.module.js';
 import { RedisPublisherService } from './redis-publisher.service.js';
+import { HeartbeatService } from './heartbeat.service.js';
 import { configuration } from './config/configuration.js';
 
 @Module({
@@ -32,6 +33,6 @@ import { configuration } from './config/configuration.js';
     // Health monitoring
     HealthModule,
   ],
-  providers: [RedisPublisherService],
+  providers: [RedisPublisherService, HeartbeatService],
 })
 export class AppModule {}

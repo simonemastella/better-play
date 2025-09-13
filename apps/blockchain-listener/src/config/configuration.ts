@@ -18,7 +18,7 @@ const envSchema = z.object({
 export type BlEnv = z.infer<typeof envSchema>;
 
 const env = loadEnv<BlEnv>(envSchema, {
-  sources: [dotEnvSource(".env"), envVarsSource()],
+  sources: [dotEnvSource()],
 });
 
 export const configuration = () => ({

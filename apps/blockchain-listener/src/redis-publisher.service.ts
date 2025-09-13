@@ -32,7 +32,7 @@ export class RedisPublisherService implements OnModuleInit, OnModuleDestroy {
   }
 
   @OnEvent("**")
-  async handleAllEvents(eventName: string, payload: any) {
+  async handleAllEvents(payload: any, eventName: string) {
     try {
       const eventData = {
         event: eventName,

@@ -38,27 +38,49 @@ services:
       retries: 5
     command: redis-server --appendonly yes
 
-  # blockchain-listener:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/blockchain-listener/Dockerfile
-  #   container_name: better-play-blockchain-listener
-  #   restart: unless-stopped
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   environment:
-  #     NODE_ENV: ${NODE_ENV:-development}
-  #     DATABASE_URL: postgresql://${POSTGRES_USER:-betterplay}:${POSTGRES_PASSWORD:-betterplay123}@postgres:5432/${POSTGRES_DB:-betterplay}
-  #     LOTTERY_CONTRACT_ADDRESS: ${LOTTERY_CONTRACT_ADDRESS}
-  #     NETWORK: ${NETWORK:-testnet}
-  #     STARTING_BLOCK: ${STARTING_BLOCK:-0}
-  #     POLLING_INTERVAL: ${POLLING_INTERVAL:-5000}
-  #   networks:
-  #     - better-play-network
-  #   volumes:
-  #     - ./apps/blockchain-listener:/app/apps/blockchain-listener:ro
-  #     - ./packages:/app/packages:ro
+  blockchain-listener:
+    build:
+      context: .
+      dockerfile: apps/blockchain-listener/Dockerfile
+    container_name: better-play-blockchain-listener
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - apps/blockchain-listener/.env.docker
+    ports:
+      - "${BLOCKCHAIN_LISTENER_PORT:-3000}:3000"
+    networks:
+      - better-play-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  realtime-api:
+    build:
+      context: .
+      dockerfile: apps/realtime-api/Dockerfile
+    container_name: better-play-realtime-api
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - apps/realtime-api/.env.docker
+    ports:
+      - "${REALTIME_API_PORT:-3001}:3001"
+    networks:
+      - better-play-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # frontend:
   #   build:

@@ -4,6 +4,7 @@ import { AnimatedBackground } from "@/components/common/AnimatedBackground";
 import { FallingTickets } from "@/components/common/FallingTickets";
 import { truncateAddress } from "@/utils/format";
 import { useState } from "react";
+import { useRealtimeEvents } from "@/hooks/useRealtimeEvents";
 
 export const Route = createFileRoute("/lottery")({
   component: LotteryPage,
@@ -14,6 +15,17 @@ function LotteryPage() {
   const { open: openWalletModal } = useWalletModal();
   const [ticketCount, setTicketCount] = useState(1);
   const [selectedRound, setSelectedRound] = useState("latest");
+  // Connect to real-time events
+  const { isConnected } = useRealtimeEvents({
+    onEvent: (event) => {
+      console.log('📡 Received event:', event);
+      
+      // Handle blockchain events here if needed
+      if (event.event?.includes('blockchain')) {
+        // Process blockchain events
+      }
+    }
+  });
 
   const handleWalletAction = () => {
     openWalletModal();
@@ -74,14 +86,24 @@ function LotteryPage() {
               </svg>
             </button>
             <h1 className="text-4xl font-black text-white">Lottery</h1>
-            <button
-              onClick={handleWalletAction}
-              className="ml-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-            >
-              {wallet.connection.isConnected
-                ? `${truncateAddress(wallet.account?.address || "", 6, 4)}`
-                : "Connect Wallet"}
-            </button>
+            <div className="ml-auto flex items-center gap-4">
+              {/* Real-time connection status */}
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                <span className="text-xs text-gray-400">
+                  {isConnected ? 'Live' : 'Offline'}
+                </span>
+              </div>
+              
+              <button
+                onClick={handleWalletAction}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+              >
+                {wallet.connection.isConnected
+                  ? `${truncateAddress(wallet.account?.address || "", 6, 4)}`
+                  : "Connect Wallet"}
+              </button>
+            </div>
           </div>
 
           {/* Massive Jackpot Display */}

@@ -12,5 +12,5 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 export const env = loadEnv(envSchema, {
-  sources: [dotEnvSource(), envVarsSource()],
+  sources: [dotEnvSource()],
 });

@@ -16,7 +16,6 @@ import { env } from './config/env.js';
   ],
   controllers: [EventsController],
   providers: [
-    EventsController, 
     RedisSubscriberService,
     {
       provide: 'REDIS',
